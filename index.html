@@ -11,8 +11,7 @@
         .tab-btn.active { background-color: #4f46e5; color: white; }
         .tab-btn { background-color: transparent; color: #cbd5e1; }
         .tab-btn:hover:not(.active) { background-color: #6366f1; color: white; }
-        
-        /* Notificaciones */
+
         #notification-container {
             position: fixed;
             bottom: 20px;
@@ -37,11 +36,28 @@
         .toast.show { transform: translateX(0); }
         .toast.success { border-left: 4px solid #10b981; }
         .toast.error { border-left: 4px solid #ef4444; }
+
+        #modal-overlay {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.55);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 60; padding: 1rem;
+        }
+        #sync-banner {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 55;
+            background: #4f46e5; color: white; text-align: center;
+            font-size: 0.8rem; padding: 6px; transition: transform 0.3s;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
     <div id="notification-container"></div>
+    <div id="sync-banner" class="hidden"><i class="fa-solid fa-rotate fa-spin mr-2"></i>Sincronizando datos...</div>
+
+    <!-- MODAL GENÉRICO (edición, abrir/cerrar caja, vender) -->
+    <div id="modal-overlay" class="hidden">
+        <div id="modal-content" class="bg-white rounded-xl shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"></div>
+    </div>
 
     <!-- PANTALLA DE LOGIN (Sin botón de registro por seguridad) -->
     <div id="auth-view" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
@@ -61,7 +77,7 @@
                     <label class="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
                     <input type="password" id="auth-password" required class="w-full border border-slate-300 rounded-md p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" placeholder="••••••••">
                 </div>
-                
+
                 <div class="pt-2">
                     <button type="button" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-md transition-colors">
                         Iniciar Sesión
@@ -86,11 +102,14 @@
                         <button onclick="switchTab('inventory')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-inventory">Bobinas</button>
                         <button onclick="switchTab('catalog')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-catalog">Catálogo</button>
                         <button onclick="switchTab('sales')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-sales">Ventas</button>
+                        <button onclick="switchTab('cash')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-cash">Caja</button>
                         <button onclick="switchTab('expenses')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-expenses">Gastos</button>
-                        
-                        <!-- Botón Salir -->
+
                         <div class="w-px h-6 bg-indigo-700 mx-2 hidden sm:block"></div>
-                        <button id="btn-logout" class="ml-2 text-indigo-200 hover:text-white transition-colors p-1.5" title="Cerrar sesión">
+                        <button id="btn-backup" title="Descargar copia de seguridad (JSON)" class="text-indigo-200 hover:text-white transition-colors p-1.5">
+                            <i class="fa-solid fa-download"></i>
+                        </button>
+                        <button id="btn-logout" class="ml-1 text-indigo-200 hover:text-white transition-colors p-1.5" title="Cerrar sesión">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </button>
                     </div>
@@ -100,34 +119,39 @@
 
         <!-- Contenedor Principal -->
         <main class="max-w-7xl mx-auto px-4 py-8 mb-12">
-            
+
             <!-- CONTENEDOR DASHBOARD -->
             <div id="view-dashboard" class="view-section">
                 <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-6">
                     <i class="fa-solid fa-chart-pie text-indigo-600"></i> Estado Financiero y Operativo
                 </h2>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="dashboard-cards">
-                    <!-- Tarjetas de métricas se llenan por JS -->
-                </div>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="dashboard-cards"></div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                         <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <i class="fa-solid fa-boxes-stacked text-slate-500"></i> Niveles de Filamento
                         </h3>
-                        <div class="grid grid-cols-1 gap-4" id="dashboard-stock">
-                            <!-- Progreso de bobinas se llena por JS -->
-                        </div>
+                        <div class="grid grid-cols-1 gap-4" id="dashboard-stock"></div>
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                         <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <i class="fa-solid fa-store text-slate-500"></i> Valor del Stock Fabricado
                         </h3>
-                        <div id="dashboard-catalog-stock">
-                            <!-- Stock de catálogo se llena por JS -->
-                        </div>
+                        <div id="dashboard-catalog-stock"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-slate-500"></i> Ingresos vs. Gastos (últimos 6 meses)
+                    </h3>
+                    <div id="dashboard-monthly" class="space-y-3"></div>
+                    <div class="flex gap-4 mt-4 text-xs text-slate-500">
+                        <span><span class="inline-block w-3 h-3 rounded-sm bg-indigo-500 align-middle mr-1"></span>Ingresos</span>
+                        <span><span class="inline-block w-3 h-3 rounded-sm bg-orange-400 align-middle mr-1"></span>Gastos</span>
                     </div>
                 </div>
             </div>
@@ -156,10 +180,16 @@
                         </button>
                     </form>
                 </div>
+
+                <div class="mb-4 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400"></i>
+                    <input type="text" id="search-inventory" placeholder="Buscar bobina por nombre, color o tipo (ej. PLA, negro, seda)..." class="w-full border border-slate-300 rounded-md py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow shadow-sm">
+                </div>
+
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[600px]">
+                    <table class="w-full text-left border-collapse min-w-[650px]">
                         <thead class="bg-slate-50 text-slate-600 text-sm">
-                            <tr><th class="p-4 border-b">Material</th><th class="p-4 border-b">Color/Tipo</th><th class="p-4 border-b">Stock Actual</th><th class="p-4 border-b">Coste Bobina</th><th class="p-4 border-b text-right">Acciones</th></tr>
+                            <tr><th class="p-4 border-b">Material</th><th class="p-4 border-b">Color / Tipo</th><th class="p-4 border-b">Stock Actual</th><th class="p-4 border-b">Coste Bobina</th><th class="p-4 border-b text-right">Acciones</th></tr>
                         </thead>
                         <tbody id="table-materials" class="text-sm"></tbody>
                     </table>
@@ -170,14 +200,14 @@
             <div id="view-catalog" class="view-section hidden">
                 <h2 class="text-2xl font-bold text-slate-800 mb-6">Catálogo y Stock de Productos</h2>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-                    <h3 class="text-lg font-semibold mb-4">Diseñar nuevo producto</h3>
+                    <h3 class="text-lg font-semibold mb-4">Crear nuevo modelo para vender</h3>
                     <form id="form-product" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                         <input required type="text" id="prod-name" placeholder="Nombre (ej. Llavero Logo)" class="lg:col-span-2 border rounded-md p-2">
-                        <select required id="prod-material" class="border rounded-md p-2 bg-white material-select">
+                        <select required id="prod-material" class="border rounded-md p-2 bg-white material-select lg:col-span-1">
                             <option value="">Cargando filamentos...</option>
                         </select>
                         <div class="flex relative">
-                            <input required type="number" id="prod-weight" placeholder="Gramos" class="border rounded-md p-2 w-full pr-8">
+                            <input required type="number" id="prod-weight" placeholder="Peso pieza" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">g</span>
                         </div>
                         <div class="flex relative">
@@ -188,51 +218,91 @@
                             <input required type="number" step="0.01" id="prod-price" placeholder="PVP" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
                         </div>
-                        <div class="flex relative lg:col-span-2">
-                            <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Stock inicial:</span>
-                            <input required type="number" id="prod-stock" value="0" class="border rounded-md p-2 pl-24 w-full">
-                        </div>
-                        <button type="submit" class="lg:col-span-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md transition-colors">
+                        <button type="submit" class="lg:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md transition-colors">
                             <i class="fa-solid fa-plus mr-2"></i>Añadir al Catálogo
                         </button>
                     </form>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="catalog-cards">
-                    <!-- Tarjetas de catálogo llenadas por JS -->
+
+                <div class="mb-4 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400"></i>
+                    <input type="text" id="search-catalog" placeholder="Buscar producto por nombre..." class="w-full border border-slate-300 rounded-md py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow shadow-sm">
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="catalog-cards"></div>
             </div>
 
             <!-- CONTENEDOR VENTAS -->
             <div id="view-sales" class="view-section hidden">
                 <h2 class="text-2xl font-bold text-slate-800 mb-6">Registro de Ventas a Medida</h2>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-                    <h3 class="text-lg font-semibold mb-4 text-slate-600 text-sm">Usa esto para encargos personalizados. Las ventas del Catálogo se hacen desde la otra pestaña.</h3>
+                    <h3 class="text-lg font-semibold mb-4 text-slate-600 text-sm">Usa esto para encargos personalizados. Para productos en stock, véndelos desde el Catálogo.</h3>
                     <form id="form-sale" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                         <input required type="text" id="sale-name" placeholder="Proyecto o Cliente" class="lg:col-span-2 border rounded-md p-2">
-                        <select required id="sale-material" class="border rounded-md p-2 bg-white material-select"></select>
+                        <select required id="sale-material" class="border rounded-md p-2 bg-white material-select lg:col-span-1"></select>
                         <div class="flex relative">
-                            <input required type="number" id="sale-weight" placeholder="Consumo" class="border rounded-md p-2 w-full pr-8">
+                            <input required type="number" id="sale-weight" placeholder="Material usado" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">g</span>
                         </div>
                         <div class="flex relative">
                             <input required type="number" step="0.5" id="sale-hours" placeholder="Horas" class="border rounded-md p-2 w-full pr-8">
-                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">hrs</span>
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">h</span>
                         </div>
                         <div class="flex relative">
                             <input required type="number" step="0.01" id="sale-price" placeholder="Cobrado" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
                         </div>
-                        <button type="submit" class="lg:col-span-6 bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-md transition-colors">
+                        <select id="sale-payment" class="border rounded-md p-2 bg-white lg:col-span-2">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                            <option value="Bizum">Bizum / Transferencia</option>
+                        </select>
+                        <button type="submit" class="lg:col-span-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-md transition-colors">
                             <i class="fa-solid fa-check mr-2"></i>Registrar Venta Personalizada
                         </button>
                     </form>
                 </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4 flex flex-wrap gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Desde</label>
+                        <input type="date" id="sale-filter-from" class="border rounded-md p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Hasta</label>
+                        <input type="date" id="sale-filter-to" class="border rounded-md p-2 text-sm">
+                    </div>
+                    <div class="flex-grow min-w-[180px] relative">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Buscar</label>
+                        <input type="text" id="search-sales" placeholder="Proyecto o cliente..." class="w-full border rounded-md p-2 text-sm">
+                    </div>
+                    <button id="btn-clear-sale-filters" class="text-sm text-indigo-600 hover:text-indigo-800 pb-2">Limpiar filtros</button>
+                    <div class="ml-auto text-sm font-semibold text-slate-600 pb-2">Total filtrado: <span id="sale-filter-total" class="text-green-600">0.00 €</span></div>
+                </div>
+
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[700px]">
+                    <table class="w-full text-left border-collapse min-w-[750px]">
                         <thead class="bg-slate-50 text-slate-600 text-sm">
-                            <tr><th class="p-4 border-b">Fecha</th><th class="p-4 border-b">Proyecto</th><th class="p-4 border-b">Consumo</th><th class="p-4 border-b">Tiempo</th><th class="p-4 border-b">Ingreso</th><th class="p-4 border-b text-right">Acciones</th></tr>
+                            <tr><th class="p-4 border-b">Fecha</th><th class="p-4 border-b">Proyecto</th><th class="p-4 border-b">Consumo</th><th class="p-4 border-b">Tiempo</th><th class="p-4 border-b">Pago</th><th class="p-4 border-b">Ingreso</th><th class="p-4 border-b text-right">Acciones</th></tr>
                         </thead>
                         <tbody id="table-sales" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR CAJA -->
+            <div id="view-cash" class="view-section hidden">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Caja Registradora</h2>
+
+                <div id="cash-status-card" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6"></div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <h3 class="text-lg font-semibold p-4 border-b">Historial de cierres</h3>
+                    <table class="w-full text-left border-collapse min-w-[700px]">
+                        <thead class="bg-slate-50 text-slate-600 text-sm">
+                            <tr><th class="p-4 border-b">Apertura</th><th class="p-4 border-b">Cierre</th><th class="p-4 border-b">Saldo Inicial</th><th class="p-4 border-b">Esperado</th><th class="p-4 border-b">Contado</th><th class="p-4 border-b">Descuadre</th></tr>
+                        </thead>
+                        <tbody id="table-cash-history" class="text-sm"></tbody>
                     </table>
                 </div>
             </div>
@@ -241,24 +311,28 @@
             <div id="view-expenses" class="view-section hidden">
                 <h2 class="text-2xl font-bold text-slate-800 mb-6">Maquinaria y Mantenimiento</h2>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-                    <form id="form-expense" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <select id="exp-type" class="border rounded-md p-2 bg-white">
+                    <form id="form-expense" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                        <select id="exp-type" class="border rounded-md p-2 bg-white lg:col-span-2">
                             <option value="Máquina">Impresora 3D</option><option value="Repuesto">Repuestos</option><option value="Otros">Otros</option>
                         </select>
-                        <input required type="text" id="exp-desc" placeholder="Descripción (ej. Cama PEI)" class="lg:col-span-3 border rounded-md p-2">
-                        <div class="flex relative">
+                        <input required type="text" id="exp-desc" placeholder="Descripción (ej. Cama PEI)" class="lg:col-span-2 border rounded-md p-2">
+                        <div class="flex relative lg:col-span-1">
                             <input required type="number" step="0.01" id="exp-cost" placeholder="Coste" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
                         </div>
-                        <button type="submit" class="lg:col-span-5 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 rounded-md transition-colors">
+                        <select id="exp-payment" class="border rounded-md p-2 bg-white lg:col-span-1">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                        </select>
+                        <button type="submit" class="lg:col-span-6 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 rounded-md transition-colors">
                             <i class="fa-solid fa-wrench mr-2"></i>Registrar Gasto
                         </button>
                     </form>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[600px]">
+                    <table class="w-full text-left border-collapse min-w-[650px]">
                         <thead class="bg-slate-50 text-slate-600 text-sm">
-                            <tr><th class="p-4 border-b">Fecha</th><th class="p-4 border-b">Tipo</th><th class="p-4 border-b">Descripción</th><th class="p-4 border-b">Coste</th><th class="p-4 border-b text-right">Acciones</th></tr>
+                            <tr><th class="p-4 border-b">Fecha</th><th class="p-4 border-b">Categoría</th><th class="p-4 border-b">Descripción</th><th class="p-4 border-b">Pago</th><th class="p-4 border-b">Coste</th><th class="p-4 border-b text-right">Acciones</th></tr>
                         </thead>
                         <tbody id="table-expenses" class="text-sm"></tbody>
                     </table>
@@ -267,7 +341,6 @@
         </main>
     </div>
 
-    <!-- Scripts de Firebase y Lógica de la App -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -286,31 +359,43 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
+
         let CURRENT_USER_ID = null;
         let materials = [];
         let sales = [];
         let expenses = [];
         let products = [];
-        const APP_ID = 'zrid-studio-app'; // Mantengo esta ID para que NO pierdas tus datos guardados
+        let cashSessions = [];
+        const APP_ID = 'zrid-studio-app';
+
+        // Control de la barra "sincronizando"
+        const requiredCollections = ['materials', 'sales', 'expenses', 'products', 'cashSessions'];
+        let loadedCollections = new Set();
+        function markLoaded(name) {
+            loadedCollections.add(name);
+            if (loadedCollections.size >= requiredCollections.length) {
+                document.getElementById('sync-banner').classList.add('hidden');
+            }
+        }
 
         const authView = document.getElementById('auth-view');
         const appView = document.getElementById('app-view');
         const emailInput = document.getElementById('auth-email');
         const passwordInput = document.getElementById('auth-password');
 
-        document.getElementById('btn-login').addEventListener('click', async () => {
+        document.getElementById('btn-login')?.addEventListener('click', async () => {
             try {
                 await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-                showToast('Sesión iniciada correctamente', 'success');
+                showToast('Sesión iniciada correctamente');
             } catch (error) {
+                console.error('Login error:', error);
                 showToast('Error: Correo o contraseña incorrectos', 'error');
             }
         });
 
-        document.getElementById('btn-logout').addEventListener('click', () => {
+        document.getElementById('btn-logout')?.addEventListener('click', () => {
             signOut(auth);
-            showToast('Sesión cerrada', 'success');
+            showToast('Sesión cerrada');
         });
 
         onAuthStateChanged(auth, (user) => {
@@ -318,7 +403,9 @@
                 CURRENT_USER_ID = user.uid;
                 authView.classList.add('hidden');
                 appView.classList.remove('hidden');
-                initDataListeners(); 
+                document.getElementById('sync-banner').classList.remove('hidden');
+                loadedCollections = new Set();
+                initDataListeners();
             } else {
                 CURRENT_USER_ID = null;
                 authView.classList.remove('hidden');
@@ -339,7 +426,7 @@
             toast.className = `toast ${type}`;
             toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'}"></i> <span>${message}</span>`;
             container.appendChild(toast);
-            
+
             setTimeout(() => toast.classList.add('show'), 10);
             setTimeout(() => {
                 toast.classList.remove('show');
@@ -347,77 +434,230 @@
             }, 3000);
         }
 
-        let unsubMaterials, unsubSales, unsubExpenses, unsubProducts;
+        // ---------- MODAL ----------
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalContent = document.getElementById('modal-content');
+        function openModal(html) {
+            modalContent.innerHTML = html;
+            modalOverlay.classList.remove('hidden');
+        }
+        window.closeModal = function() {
+            modalOverlay.classList.add('hidden');
+            modalContent.innerHTML = '';
+        };
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) window.closeModal(); });
+
+        let unsubMaterials, unsubSales, unsubExpenses, unsubProducts, unsubCash;
 
         function initDataListeners() {
-            if(unsubMaterials) unsubMaterials();
-            if(unsubSales) unsubSales();
-            if(unsubExpenses) unsubExpenses();
-            if(unsubProducts) unsubProducts();
+            if (unsubMaterials) unsubMaterials();
+            if (unsubSales) unsubSales();
+            if (unsubExpenses) unsubExpenses();
+            if (unsubProducts) unsubProducts();
+            if (unsubCash) unsubCash();
 
             const matRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials');
             const salesRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales');
             const expRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'expenses');
             const prodRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products');
+            const cashRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'cashSessions');
 
             unsubMaterials = onSnapshot(matRef, (snap) => {
-                materials = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                materials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 updateMaterialUI();
                 updateDashboard();
-            });
+                markLoaded('materials');
+            }, (err) => { console.error(err); showToast('Error al cargar bobinas', 'error'); });
 
             unsubSales = onSnapshot(salesRef, (snap) => {
-                sales = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                sales = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 updateSalesUI();
                 updateDashboard();
-            });
+                updateCashUI();
+                markLoaded('sales');
+            }, (err) => { console.error(err); showToast('Error al cargar ventas', 'error'); });
 
             unsubExpenses = onSnapshot(expRef, (snap) => {
-                expenses = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                expenses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 updateExpensesUI();
                 updateDashboard();
-            });
+                updateCashUI();
+                markLoaded('expenses');
+            }, (err) => { console.error(err); showToast('Error al cargar gastos', 'error'); });
 
             unsubProducts = onSnapshot(prodRef, (snap) => {
-                products = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 updateCatalogUI();
-                updateDashboard(); // ESTA LÍNEA ES VITAL para que el stock se actualice en el resumen
-            });
+                updateDashboard();
+                markLoaded('products');
+            }, (err) => { console.error(err); showToast('Error al cargar catálogo', 'error'); });
+
+            unsubCash = onSnapshot(cashRef, (snap) => {
+                cashSessions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                updateCashUI();
+                markLoaded('cashSessions');
+            }, (err) => { console.error(err); showToast('Error al cargar caja', 'error'); });
         }
 
+        function getOpenSession() {
+            return cashSessions.find(s => s.status === 'open') || null;
+        }
+
+        // ---------- BOBINAS ----------
         function updateMaterialUI() {
             const selects = document.querySelectorAll('.material-select');
             selects.forEach(select => {
-                select.innerHTML = '<option value="" disabled selected>Selecciona Filamento...</option>' + 
+                const current = select.value;
+                select.innerHTML = '<option value="" disabled selected>Selecciona Filamento...</option>' +
                     materials.map(m => `<option value="${m.id}">${m.name} (${m.color})</option>`).join('');
+                if (current) select.value = current;
             });
 
-            document.getElementById('table-materials').innerHTML = materials.map(m => `
+            const searchTerm = (document.getElementById('search-inventory')?.value || '').toLowerCase();
+            const filteredMaterials = materials.filter(m =>
+                (m.name && m.name.toLowerCase().includes(searchTerm)) ||
+                (m.color && m.color.toLowerCase().includes(searchTerm)) ||
+                (m.type && m.type.toLowerCase().includes(searchTerm))
+            );
+
+            document.getElementById('table-materials').innerHTML = filteredMaterials.map(m => `
                 <tr class="border-b hover:bg-slate-50">
                     <td class="p-4 font-medium text-slate-800">${m.name}</td>
                     <td class="p-4">${m.color} - ${m.type}</td>
                     <td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-semibold ${m.currentWeight < 200 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${m.currentWeight}g / ${m.totalWeight}g</span></td>
                     <td class="p-4">${Number(m.cost).toFixed(2)} €</td>
-                    <td class="p-4 text-right"><button onclick="window.deleteDocItem('materials', '${m.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                    <td class="p-4 text-right space-x-3">
+                        <button onclick="window.editMaterial('${m.id}')" class="text-slate-400 hover:text-indigo-600"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="window.deleteDocItem('materials', '${m.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
                 </tr>
-            `).join('') || `<tr><td colSpan="5" class="p-8 text-center text-slate-500">No hay bobinas registradas.</td></tr>`;
+            `).join('') || `<tr><td colspan="5" class="p-8 text-center text-slate-500">No se encontraron bobinas que coincidan con la búsqueda.</td></tr>`;
         }
+        document.getElementById('search-inventory')?.addEventListener('input', updateMaterialUI);
 
+        window.editMaterial = function(id) {
+            const m = materials.find(x => x.id === id);
+            if (!m) return;
+            openModal(`
+                <h3 class="text-lg font-bold mb-4">Editar bobina</h3>
+                <div class="space-y-3">
+                    <input id="em-name" value="${m.name}" placeholder="Nombre" class="w-full border rounded-md p-2">
+                    <input id="em-color" value="${m.color}" placeholder="Color" class="w-full border rounded-md p-2">
+                    <select id="em-type" class="w-full border rounded-md p-2 bg-white">
+                        ${['PLA','PETG','ABS','TPU'].map(t => `<option value="${t}" ${m.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                    </select>
+                    <div>
+                        <label class="text-xs text-slate-500">Stock actual (g)</label>
+                        <input id="em-current" type="number" value="${m.currentWeight}" class="w-full border rounded-md p-2">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500">Peso total de la bobina (g)</label>
+                        <input id="em-total" type="number" value="${m.totalWeight}" class="w-full border rounded-md p-2">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500">Coste de la bobina (€)</label>
+                        <input id="em-cost" type="number" step="0.01" value="${m.cost}" class="w-full border rounded-md p-2">
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-5">
+                    <button onclick="window.closeModal()" class="flex-1 border rounded-md py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button onclick="window.saveMaterial('${id}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md py-2">Guardar</button>
+                </div>
+            `);
+        };
+
+        window.saveMaterial = async function(id) {
+            try {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', id), {
+                    name: document.getElementById('em-name').value,
+                    color: document.getElementById('em-color').value,
+                    type: document.getElementById('em-type').value,
+                    currentWeight: Number(document.getElementById('em-current').value),
+                    totalWeight: Number(document.getElementById('em-total').value),
+                    cost: Number(document.getElementById('em-cost').value)
+                });
+                window.closeModal();
+                showToast('Bobina actualizada');
+            } catch (e) {
+                console.error(e);
+                showToast('No se pudo guardar: ' + e.message, 'error');
+            }
+        };
+
+        // ---------- GASTOS ----------
         function updateExpensesUI() {
             document.getElementById('table-expenses').innerHTML = expenses.map(e => `
                 <tr class="border-b hover:bg-slate-50">
                     <td class="p-4 text-slate-500">${e.date}</td>
                     <td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded text-xs">${e.type}</span></td>
                     <td class="p-4 font-medium">${e.description}</td>
+                    <td class="p-4"><span class="text-xs text-slate-500">${e.paymentMethod || 'Efectivo'}</span></td>
                     <td class="p-4 font-semibold text-orange-600">-${Number(e.cost).toFixed(2)} €</td>
-                    <td class="p-4 text-right"><button onclick="window.deleteDocItem('expenses', '${e.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                    <td class="p-4 text-right space-x-3">
+                        <button onclick="window.editExpense('${e.id}')" class="text-slate-400 hover:text-indigo-600"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="window.deleteDocItem('expenses', '${e.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
                 </tr>
-            `).join('') || `<tr><td colSpan="5" class="p-8 text-center text-slate-500">No hay gastos registrados.</td></tr>`;
+            `).join('') || `<tr><td colspan="6" class="p-8 text-center text-slate-500">No hay gastos registrados.</td></tr>`;
+        }
+
+        window.editExpense = function(id) {
+            const e = expenses.find(x => x.id === id);
+            if (!e) return;
+            openModal(`
+                <h3 class="text-lg font-bold mb-4">Editar gasto</h3>
+                <div class="space-y-3">
+                    <select id="ee-type" class="w-full border rounded-md p-2 bg-white">
+                        ${['Máquina','Repuesto','Otros'].map(t => `<option value="${t}" ${e.type === t ? 'selected' : ''}>${t === 'Máquina' ? 'Impresora 3D' : t}</option>`).join('')}
+                    </select>
+                    <input id="ee-desc" value="${e.description}" placeholder="Descripción" class="w-full border rounded-md p-2">
+                    <input id="ee-cost" type="number" step="0.01" value="${e.cost}" placeholder="Coste" class="w-full border rounded-md p-2">
+                    <select id="ee-payment" class="w-full border rounded-md p-2 bg-white">
+                        ${['Efectivo','Tarjeta'].map(p => `<option value="${p}" ${(e.paymentMethod || 'Efectivo') === p ? 'selected' : ''}>${p}</option>`).join('')}
+                    </select>
+                    <input id="ee-date" type="date" value="${e.date}" class="w-full border rounded-md p-2">
+                </div>
+                <div class="flex gap-2 mt-5">
+                    <button onclick="window.closeModal()" class="flex-1 border rounded-md py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button onclick="window.saveExpense('${id}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md py-2">Guardar</button>
+                </div>
+            `);
+        };
+
+        window.saveExpense = async function(id) {
+            try {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'expenses', id), {
+                    type: document.getElementById('ee-type').value,
+                    description: document.getElementById('ee-desc').value,
+                    cost: Number(document.getElementById('ee-cost').value),
+                    paymentMethod: document.getElementById('ee-payment').value,
+                    date: document.getElementById('ee-date').value
+                });
+                window.closeModal();
+                showToast('Gasto actualizado');
+            } catch (err) {
+                console.error(err);
+                showToast('No se pudo guardar: ' + err.message, 'error');
+            }
+        };
+
+        // ---------- VENTAS ----------
+        function getFilteredSales() {
+            const term = (document.getElementById('search-sales')?.value || '').toLowerCase();
+            const from = document.getElementById('sale-filter-from')?.value;
+            const to = document.getElementById('sale-filter-to')?.value;
+            return sales.filter(s => {
+                if (term && !(s.projectName || '').toLowerCase().includes(term)) return false;
+                if (from && s.date < from) return false;
+                if (to && s.date > to) return false;
+                return true;
+            });
         }
 
         function updateSalesUI() {
-            document.getElementById('table-sales').innerHTML = sales.map(s => {
-                const m = materials.find(x => x.id === s.materialId) || {name: 'Borrado', color: ''};
+            const filtered = getFilteredSales().slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+            document.getElementById('table-sales').innerHTML = filtered.map(s => {
+                const m = materials.find(x => x.id === s.materialId) || { name: 'Borrado', color: '' };
                 return `
                 <tr class="border-b hover:bg-slate-50">
                     <td class="p-4 text-slate-500">${s.date}</td>
@@ -427,29 +667,107 @@
                     </td>
                     <td class="p-4">${s.gramsUsed}g <span class="text-xs text-slate-400 block">${m.name} ${m.color}</span></td>
                     <td class="p-4">${s.hours || 0} h</td>
+                    <td class="p-4"><span class="text-xs text-slate-500">${s.paymentMethod || 'Efectivo'}</span></td>
                     <td class="p-4 font-semibold text-green-600">+${Number(s.price).toFixed(2)} €</td>
-                    <td class="p-4 text-right">
+                    <td class="p-4 text-right space-x-3">
+                        <button onclick="window.editSale('${s.id}')" class="text-slate-400 hover:text-indigo-600"><i class="fa-solid fa-pen"></i></button>
                         <button onclick="window.deleteDocItem('sales', '${s.id}', '${s.materialId}', ${s.gramsUsed}, ${s.isFromStock || false}, '${s.productId || ''}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
-            `}).join('') || `<tr><td colSpan="6" class="p-8 text-center text-slate-500">No hay ventas registradas.</td></tr>`;
-        }
+            `}).join('') || `<tr><td colspan="7" class="p-8 text-center text-slate-500">No hay ventas que coincidan con el filtro.</td></tr>`;
 
+            const total = filtered.reduce((acc, s) => acc + Number(s.price || 0), 0);
+            document.getElementById('sale-filter-total').textContent = total.toFixed(2) + ' €';
+        }
+        ['search-sales', 'sale-filter-from', 'sale-filter-to'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', updateSalesUI);
+        });
+        document.getElementById('btn-clear-sale-filters')?.addEventListener('click', () => {
+            document.getElementById('search-sales').value = '';
+            document.getElementById('sale-filter-from').value = '';
+            document.getElementById('sale-filter-to').value = '';
+            updateSalesUI();
+        });
+
+        window.editSale = function(id) {
+            const s = sales.find(x => x.id === id);
+            if (!s) return;
+            openModal(`
+                <h3 class="text-lg font-bold mb-4">Editar venta</h3>
+                <p class="text-xs text-slate-500 mb-3">El material usado se puede ajustar; el stock de la bobina se corrige automáticamente. No se puede cambiar de bobina desde aquí.</p>
+                <div class="space-y-3">
+                    <input id="es-name" value="${s.projectName}" placeholder="Proyecto o Cliente" class="w-full border rounded-md p-2">
+                    <div>
+                        <label class="text-xs text-slate-500">Material usado (g)</label>
+                        <input id="es-grams" type="number" value="${s.gramsUsed}" class="w-full border rounded-md p-2">
+                    </div>
+                    <input id="es-hours" type="number" step="0.5" value="${s.hours || 0}" placeholder="Horas" class="w-full border rounded-md p-2">
+                    <input id="es-price" type="number" step="0.01" value="${s.price}" placeholder="Cobrado" class="w-full border rounded-md p-2">
+                    <select id="es-payment" class="w-full border rounded-md p-2 bg-white">
+                        ${['Efectivo','Tarjeta','Bizum'].map(p => `<option value="${p}" ${(s.paymentMethod || 'Efectivo') === p ? 'selected' : ''}>${p === 'Bizum' ? 'Bizum / Transferencia' : p}</option>`).join('')}
+                    </select>
+                    <input id="es-date" type="date" value="${s.date}" class="w-full border rounded-md p-2">
+                </div>
+                <div class="flex gap-2 mt-5">
+                    <button onclick="window.closeModal()" class="flex-1 border rounded-md py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button onclick="window.saveSale('${id}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md py-2">Guardar</button>
+                </div>
+            `);
+        };
+
+        window.saveSale = async function(id) {
+            const s = sales.find(x => x.id === id);
+            if (!s) return;
+            try {
+                const newGrams = Number(document.getElementById('es-grams').value);
+                const delta = newGrams - Number(s.gramsUsed || 0);
+                if (delta !== 0 && s.materialId) {
+                    const m = materials.find(x => x.id === s.materialId);
+                    if (m) {
+                        if (m.currentWeight - delta < 0) {
+                            showToast('No hay suficiente material en la bobina para ese ajuste', 'error');
+                            return;
+                        }
+                        await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', m.id), {
+                            currentWeight: Number(m.currentWeight) - delta
+                        });
+                    }
+                }
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales', id), {
+                    projectName: document.getElementById('es-name').value,
+                    gramsUsed: newGrams,
+                    hours: Number(document.getElementById('es-hours').value || 0),
+                    price: Number(document.getElementById('es-price').value),
+                    paymentMethod: document.getElementById('es-payment').value,
+                    date: document.getElementById('es-date').value
+                });
+                window.closeModal();
+                showToast('Venta actualizada');
+            } catch (err) {
+                console.error(err);
+                showToast('No se pudo guardar: ' + err.message, 'error');
+            }
+        };
+
+        // ---------- CATÁLOGO ----------
         function updateCatalogUI() {
-            document.getElementById('catalog-cards').innerHTML = products.map(p => {
+            const term = (document.getElementById('search-catalog')?.value || '').toLowerCase();
+            const filtered = products.filter(p => (p.name || '').toLowerCase().includes(term));
+
+            document.getElementById('catalog-cards').innerHTML = filtered.map(p => {
                 const m = materials.find(x => x.id === p.materialId);
                 const matCost = (m && m.totalWeight > 0) ? (m.cost / m.totalWeight) * p.weight : 0;
                 const profit = p.price - matCost;
                 const currentStock = Number(p.stock || 0);
-                
+
                 return `
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col h-full">
                     <div class="flex justify-between items-start mb-2">
                         <h4 class="font-bold text-slate-800 text-lg">${p.name}</h4>
                         <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-full px-1">
-                            <button onclick="window.adjustStock('${p.id}', -1)" class="text-slate-400 hover:text-red-500 w-6 h-6 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors" title="Restar stock manualmente (Rotura/Regalo)"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <button onclick="window.adjustStock('${p.id}', -1)" class="text-slate-400 hover:text-red-500 w-6 h-6 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors"><i class="fa-solid fa-minus text-xs"></i></button>
                             <span class="${currentStock > 0 ? 'text-blue-700' : 'text-slate-500'} text-xs font-bold px-1 min-w-[50px] text-center">St: ${currentStock}</span>
-                            <button onclick="window.adjustStock('${p.id}', 1)" class="text-slate-400 hover:text-green-500 w-6 h-6 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors" title="Sumar stock manualmente"><i class="fa-solid fa-plus text-xs"></i></button>
+                            <button onclick="window.adjustStock('${p.id}', 1)" class="text-slate-400 hover:text-green-500 w-6 h-6 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors"><i class="fa-solid fa-plus text-xs"></i></button>
                         </div>
                     </div>
                     <div class="text-sm text-slate-500 mb-4 flex-grow">
@@ -462,19 +780,394 @@
                             <p class="text-lg font-bold text-indigo-600">+${profit.toFixed(2)}€</p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 mt-auto">
+                    <div class="grid grid-cols-3 gap-2 mt-auto">
                         <button onclick="window.fabricateProduct('${p.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded font-medium text-sm transition-colors">
-                            <i class="fa-solid fa-hammer"></i> Fabricar
+                            <i class="fa-solid fa-hammer"></i>
                         </button>
-                        <button onclick="window.sellProduct('${p.id}')" class="bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded font-medium text-sm transition-colors ${currentStock < 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${currentStock < 1 ? 'disabled' : ''}>
+                        <button onclick="window.openSellModal('${p.id}')" class="col-span-2 bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded font-medium text-sm transition-colors ${currentStock < 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${currentStock < 1 ? 'disabled' : ''}>
                             <i class="fa-solid fa-cart-shopping"></i> Vender
                         </button>
                     </div>
-                    <button onclick="window.deleteDocItem('products', '${p.id}')" class="mt-3 text-xs text-red-400 hover:text-red-600 text-center w-full transition-colors">Eliminar del catálogo</button>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <button onclick="window.editProduct('${p.id}')" class="text-xs text-indigo-500 hover:text-indigo-700 text-center w-full transition-colors">Editar</button>
+                        <button onclick="window.deleteDocItem('products', '${p.id}')" class="text-xs text-red-400 hover:text-red-600 text-center w-full transition-colors">Eliminar</button>
+                    </div>
                 </div>
-            `}).join('') || `<div class="col-span-full p-8 text-center text-slate-500 border-2 border-dashed rounded-xl">No tienes productos en el catálogo.</div>`;
+            `}).join('') || `<div class="col-span-full p-8 text-center text-slate-500 border-2 border-dashed rounded-xl">No hay productos que coincidan.</div>`;
+        }
+        document.getElementById('search-catalog')?.addEventListener('input', updateCatalogUI);
+
+        window.editProduct = function(id) {
+            const p = products.find(x => x.id === id);
+            if (!p) return;
+            const options = materials.map(m => `<option value="${m.id}" ${m.id === p.materialId ? 'selected' : ''}>${m.name} (${m.color})</option>`).join('');
+            openModal(`
+                <h3 class="text-lg font-bold mb-4">Editar producto</h3>
+                <div class="space-y-3">
+                    <input id="ep-name" value="${p.name}" placeholder="Nombre" class="w-full border rounded-md p-2">
+                    <select id="ep-material" class="w-full border rounded-md p-2 bg-white">${options}</select>
+                    <input id="ep-weight" type="number" value="${p.weight}" placeholder="Peso pieza (g)" class="w-full border rounded-md p-2">
+                    <input id="ep-hours" type="number" step="0.5" value="${p.hours || 0}" placeholder="Horas" class="w-full border rounded-md p-2">
+                    <input id="ep-price" type="number" step="0.01" value="${p.price}" placeholder="PVP" class="w-full border rounded-md p-2">
+                    <div>
+                        <label class="text-xs text-slate-500">Stock actual (unidades)</label>
+                        <input id="ep-stock" type="number" value="${p.stock || 0}" class="w-full border rounded-md p-2">
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-5">
+                    <button onclick="window.closeModal()" class="flex-1 border rounded-md py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button onclick="window.saveProduct('${id}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md py-2">Guardar</button>
+                </div>
+            `);
+        };
+
+        window.saveProduct = async function(id) {
+            try {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', id), {
+                    name: document.getElementById('ep-name').value,
+                    materialId: document.getElementById('ep-material').value,
+                    weight: Number(document.getElementById('ep-weight').value),
+                    hours: Number(document.getElementById('ep-hours').value || 0),
+                    price: Number(document.getElementById('ep-price').value),
+                    stock: Number(document.getElementById('ep-stock').value || 0)
+                });
+                window.closeModal();
+                showToast('Producto actualizado');
+            } catch (err) {
+                console.error(err);
+                showToast('No se pudo guardar: ' + err.message, 'error');
+            }
+        };
+
+        window.openSellModal = function(prodId) {
+            const p = products.find(x => x.id === prodId);
+            if (!p || Number(p.stock) < 1) return;
+            openModal(`
+                <h3 class="text-lg font-bold mb-1">Vender ${p.name}</h3>
+                <p class="text-slate-500 text-sm mb-4">PVP: <span class="font-semibold text-green-600">${Number(p.price).toFixed(2)}€</span></p>
+                <label class="text-xs text-slate-500">Método de pago</label>
+                <select id="sell-payment" class="w-full border rounded-md p-2 bg-white mt-1">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Tarjeta">Tarjeta</option>
+                    <option value="Bizum">Bizum / Transferencia</option>
+                </select>
+                <div class="flex gap-2 mt-5">
+                    <button onclick="window.closeModal()" class="flex-1 border rounded-md py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button onclick="window.sellProduct('${prodId}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-md py-2">Confirmar venta</button>
+                </div>
+            `);
+        };
+
+        // ---------- ACCIONES COMPARTIDAS ----------
+        window.deleteDocItem = async (col, id, matId = null, grams = 0, isFromStock = false, prodId = null) => {
+            if (confirm('¿Seguro que quieres borrar esto de forma permanente?')) {
+                try {
+                    if (col === 'sales') {
+                        if (isFromStock && prodId && prodId !== 'undefined') {
+                            const p = products.find(x => x.id === prodId);
+                            if (p) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock || 0) + 1 });
+                        } else if (matId && matId !== 'undefined') {
+                            const m = materials.find(x => x.id === matId);
+                            if (m) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: Number(m.currentWeight) + Number(grams) });
+                        }
+                    }
+                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, col, id));
+                    showToast('Elemento borrado correctamente');
+                } catch (e) {
+                    console.error(e);
+                    showToast('Hubo un error al borrar: ' + e.message, 'error');
+                }
+            }
+        };
+
+        window.fabricateProduct = async (prodId) => {
+            const p = products.find(x => x.id === prodId);
+            if (!p) return;
+            const m = materials.find(x => x.id === p.materialId);
+
+            if (!m) return showToast('Filamento no encontrado', 'error');
+            if (m.currentWeight < p.weight) return showToast('No hay suficiente filamento en la bobina', 'error');
+
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', m.id), { currentWeight: Number(m.currentWeight) - Number(p.weight) });
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock || 0) + 1 });
+            showToast(`Fabricado: +1 ${p.name}`);
+        };
+
+        window.sellProduct = async (prodId) => {
+            const p = products.find(x => x.id === prodId);
+            if (!p || Number(p.stock) < 1) return showToast('No hay stock para vender', 'error');
+            const paymentMethod = document.getElementById('sell-payment')?.value || 'Efectivo';
+            const openSession = getOpenSession();
+
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock) - 1 });
+            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), {
+                projectName: `Venta: ${p.name}`,
+                materialId: p.materialId,
+                productId: prodId,
+                gramsUsed: p.weight,
+                hours: p.hours || 0,
+                price: p.price,
+                paymentMethod,
+                date: new Date().toISOString().split('T')[0],
+                isFromStock: true,
+                cashSessionId: openSession ? openSession.id : null
+            });
+            window.closeModal();
+            showToast(`Vendido: ${p.name} por ${p.price}€`);
+        };
+
+        window.adjustStock = async (prodId, change) => {
+            const p = products.find(x => x.id === prodId);
+            if (!p) return;
+            const newStock = Number(p.stock || 0) + change;
+            if (newStock < 0) return showToast('El stock no puede ser negativo', 'error');
+
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: newStock });
+            showToast(`Stock ajustado manualmente`);
+        };
+
+        // ---------- FORMULARIOS ----------
+        document.getElementById('form-material')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('mat-name').value,
+                color: document.getElementById('mat-color').value,
+                type: document.getElementById('mat-type').value,
+                totalWeight: Number(document.getElementById('mat-weight').value),
+                currentWeight: Number(document.getElementById('mat-weight').value),
+                cost: Number(document.getElementById('mat-cost').value)
+            };
+            try {
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials'), data);
+                e.target.reset();
+                showToast('Bobina guardada');
+            } catch (err) {
+                console.error(err);
+                showToast('Error al guardar la bobina: ' + err.message, 'error');
+            }
+        });
+
+        document.getElementById('form-product')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products'), {
+                    name: document.getElementById('prod-name').value,
+                    materialId: document.getElementById('prod-material').value,
+                    weight: Number(document.getElementById('prod-weight').value),
+                    hours: Number(document.getElementById('prod-hours').value || 0),
+                    price: Number(document.getElementById('prod-price').value),
+                    stock: 0
+                });
+                e.target.reset();
+                showToast('Producto añadido al catálogo');
+            } catch (err) {
+                console.error(err);
+                showToast('Error al guardar el producto: ' + err.message, 'error');
+            }
+        });
+
+        document.getElementById('form-sale')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const matId = document.getElementById('sale-material').value;
+            const grams = Number(document.getElementById('sale-weight').value);
+            const m = materials.find(x => x.id === matId);
+
+            if (!m || m.currentWeight < grams) return showToast('No hay suficiente material en la bobina', 'error');
+
+            const openSession = getOpenSession();
+            const saleData = {
+                projectName: document.getElementById('sale-name').value,
+                materialId: matId,
+                gramsUsed: grams,
+                hours: Number(document.getElementById('sale-hours').value || 0),
+                price: Number(document.getElementById('sale-price').value),
+                paymentMethod: document.getElementById('sale-payment').value,
+                date: new Date().toISOString().split('T')[0],
+                isFromStock: false,
+                cashSessionId: openSession ? openSession.id : null
+            };
+
+            try {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: Number(m.currentWeight) - grams });
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), saleData);
+                e.target.reset();
+                showToast('Venta registrada');
+            } catch (err) {
+                console.error(err);
+                showToast('Error al registrar la venta: ' + err.message, 'error');
+            }
+        });
+
+        document.getElementById('form-expense')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const openSession = getOpenSession();
+            try {
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'expenses'), {
+                    type: document.getElementById('exp-type').value,
+                    description: document.getElementById('exp-desc').value,
+                    cost: Number(document.getElementById('exp-cost').value),
+                    paymentMethod: document.getElementById('exp-payment').value,
+                    date: new Date().toISOString().split('T')[0],
+                    cashSessionId: openSession ? openSession.id : null
+                });
+                e.target.reset();
+                showToast('Gasto registrado');
+            } catch (err) {
+                console.error(err);
+                showToast('Error al registrar el gasto: ' + err.message, 'error');
+            }
+        });
+
+        // ---------- CAJA ----------
+        function sessionTotals(sessionId) {
+            const sSales = sales.filter(s => s.cashSessionId === sessionId);
+            const sExpenses = expenses.filter(x => x.cashSessionId === sessionId);
+            const cashSales = sSales.filter(s => (s.paymentMethod || 'Efectivo') === 'Efectivo').reduce((a, s) => a + Number(s.price || 0), 0);
+            const otherSales = sSales.filter(s => (s.paymentMethod || 'Efectivo') !== 'Efectivo').reduce((a, s) => a + Number(s.price || 0), 0);
+            const cashExpenses = sExpenses.filter(x => (x.paymentMethod || 'Efectivo') === 'Efectivo').reduce((a, x) => a + Number(x.cost || 0), 0);
+            return { cashSales, otherSales, cashExpenses, totalSales: cashSales + otherSales, salesCount: sSales.length };
         }
 
+        function updateCashUI() {
+            const openSession = getOpenSession();
+            const card = document.getElementById('cash-status-card');
+            if (!card) return;
+
+            if (!openSession) {
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm text-slate-500 uppercase font-semibold tracking-wide">Estado</p>
+                            <p class="text-xl font-bold text-slate-700">Caja cerrada</p>
+                        </div>
+                        <button onclick="window.openCashOpenModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-md">
+                            <i class="fa-solid fa-cash-register mr-2"></i>Abrir caja
+                        </button>
+                    </div>
+                `;
+            } else {
+                const t = sessionTotals(openSession.id);
+                const expected = Number(openSession.openingBalance || 0) + t.cashSales - t.cashExpenses;
+                const openedDate = new Date(openSession.openedAt);
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+                        <div>
+                            <p class="text-sm text-slate-500 uppercase font-semibold tracking-wide">Estado</p>
+                            <p class="text-xl font-bold text-green-700">Caja abierta</p>
+                            <p class="text-xs text-slate-400">Desde ${openedDate.toLocaleString('es-ES')}</p>
+                        </div>
+                        <button onclick="window.openCashCloseModal('${openSession.id}')" class="bg-orange-500 hover:bg-orange-600 text-white font-medium px-5 py-2.5 rounded-md">
+                            <i class="fa-solid fa-lock mr-2"></i>Cerrar caja
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                        <div class="bg-slate-50 rounded-lg p-3">
+                            <p class="text-slate-500 text-xs uppercase">Saldo inicial</p>
+                            <p class="font-bold text-slate-700">${Number(openSession.openingBalance || 0).toFixed(2)} €</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-3">
+                            <p class="text-slate-500 text-xs uppercase">Ventas efectivo</p>
+                            <p class="font-bold text-green-600">+${t.cashSales.toFixed(2)} €</p>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-3">
+                            <p class="text-slate-500 text-xs uppercase">Gastos efectivo</p>
+                            <p class="font-bold text-orange-600">-${t.cashExpenses.toFixed(2)} €</p>
+                        </div>
+                        <div class="bg-indigo-50 rounded-lg p-3">
+                            <p class="text-slate-500 text-xs uppercase">Esperado en caja</p>
+                            <p class="font-bold text-indigo-700">${expected.toFixed(2)} €</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-3">Ventas con tarjeta/Bizum de este turno: ${t.otherSales.toFixed(2)} € (no afectan al efectivo de caja). Nº de ventas: ${t.salesCount}.</p>
+                `;
+            }
+
+            const closed = cashSessions.filter(s => s.status === 'closed').sort((a, b) => (b.closedAt || '').localeCompare(a.closedAt || ''));
+            document.getElementById('table-cash-history').innerHTML = closed.map(s => {
+                const diff = Number(s.difference || 0);
+                const diffClass = Math.abs(diff) < 0.01 ? 'text-slate-500' : (diff > 0 ? 'text-green-600' : 'text-red-600');
+                return `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-4 text-slate-500">${new Date(s.openedAt).toLocaleString('es-ES')}</td>
+                    <td class="p-4 text-slate-500">${new Date(s.closedAt).toLocaleString('es-ES')}</td>
+                    <td class="p-4">${Number(s.openingBalance || 0).toFixed(2)} €</td>
+                    <td class="p-4">${Number(s.expectedCash || 0).toFixed(2)} €</td>
+                    <td class="p-4">${Number(s.countedCash || 0).toFixed(2)} €</td>
+                    <td class="p-4 font-semibold ${diffClass}">${diff > 0 ? '+' : ''}${diff.toFixed(2)} €</td>
+                </tr>
+            `}).join('') || `<tr><td colspan="6" class="p-8 text-center text-slate-500">Todavía no hay cierres de caja.</td></tr>`;
+        }
+
+        window.openCashOpenModal = function() {
+            openModal(`
+                <h3 class="text-lg font-bold mb-4">Abrir caja</h3>
+                <label class="text-xs text-slate-500">Efectivo con el que empiezas el turno</label>
+                <input id="cash-opening" type="number" step="0.01" value="0" class="w-full border rounded-md p-2 mt-1">
+                <div class="flex gap-2 mt-5">
+                    <button onclick="window.closeModal()" class="flex-1 border rounded-md py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button onclick="window.confirmOpenCash()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md py-2">Abrir</button>
+                </div>
+            `);
+        };
+
+        window.confirmOpenCash = async function() {
+            if (getOpenSession()) { showToast('Ya hay una caja abierta', 'error'); return; }
+            const openingBalance = Number(document.getElementById('cash-opening').value || 0);
+            try {
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'cashSessions'), {
+                    openedAt: new Date().toISOString(),
+                    openingBalance,
+                    status: 'open'
+                });
+                window.closeModal();
+                showToast('Caja abierta');
+            } catch (err) {
+                console.error(err);
+                showToast('No se pudo abrir la caja: ' + err.message, 'error');
+            }
+        };
+
+        window.openCashCloseModal = function(sessionId) {
+            const session = cashSessions.find(x => x.id === sessionId);
+            if (!session) return;
+            const t = sessionTotals(sessionId);
+            const expected = Number(session.openingBalance || 0) + t.cashSales - t.cashExpenses;
+            openModal(`
+                <h3 class="text-lg font-bold mb-1">Cerrar caja</h3>
+                <p class="text-sm text-slate-500 mb-4">Efectivo esperado según el sistema: <span class="font-bold text-indigo-700">${expected.toFixed(2)} €</span></p>
+                <label class="text-xs text-slate-500">Efectivo contado a mano</label>
+                <input id="cash-counted" type="number" step="0.01" value="${expected.toFixed(2)}" class="w-full border rounded-md p-2 mt-1">
+                <div class="flex gap-2 mt-5">
+                    <button onclick="window.closeModal()" class="flex-1 border rounded-md py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button onclick="window.confirmCloseCash('${sessionId}', ${expected})" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-md py-2">Cerrar caja</button>
+                </div>
+            `);
+        };
+
+        window.confirmCloseCash = async function(sessionId, expected) {
+            const countedCash = Number(document.getElementById('cash-counted').value || 0);
+            const difference = countedCash - expected;
+            try {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'cashSessions', sessionId), {
+                    status: 'closed',
+                    closedAt: new Date().toISOString(),
+                    expectedCash: expected,
+                    countedCash,
+                    difference
+                });
+                window.closeModal();
+                if (Math.abs(difference) < 0.01) {
+                    showToast('Caja cerrada, cuadre correcto');
+                } else {
+                    showToast(`Caja cerrada con descuadre de ${difference.toFixed(2)} €`, difference < 0 ? 'error' : 'success');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('No se pudo cerrar la caja: ' + err.message, 'error');
+            }
+        };
+
+        // ---------- DASHBOARD ----------
         function updateDashboard() {
             const matCost = materials.reduce((acc, m) => acc + Number(m.cost || 0), 0);
             const eqCost = expenses.reduce((acc, e) => acc + Number(e.cost || 0), 0);
@@ -531,136 +1224,57 @@
                     ${inStockProducts.length === 0 ? '<p class="text-sm text-slate-500">Las estanterías están vacías.</p>' : ''}
                 </div>
             `;
+
+            renderMonthlyChart();
         }
 
-        document.getElementById('form-material').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = {
-                name: document.getElementById('mat-name').value,
-                color: document.getElementById('mat-color').value,
-                type: document.getElementById('mat-type').value,
-                totalWeight: Number(document.getElementById('mat-weight').value),
-                currentWeight: Number(document.getElementById('mat-weight').value),
-                cost: Number(document.getElementById('mat-cost').value)
-            };
-            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials'), data);
-            e.target.reset();
-            showToast('Bobina guardada');
-        });
-
-        document.getElementById('form-product').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products'), {
-                name: document.getElementById('prod-name').value,
-                materialId: document.getElementById('prod-material').value,
-                weight: Number(document.getElementById('prod-weight').value),
-                hours: Number(document.getElementById('prod-hours').value || 0),
-                price: Number(document.getElementById('prod-price').value),
-                stock: Number(document.getElementById('prod-stock').value || 0)
-            });
-            e.target.reset();
-            showToast('Producto añadido al catálogo');
-        });
-
-        document.getElementById('form-sale').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const matId = document.getElementById('sale-material').value;
-            const grams = Number(document.getElementById('sale-weight').value);
-            const m = materials.find(x => x.id === matId);
-            
-            if(!m || m.currentWeight < grams) return showToast('No hay suficiente material en la bobina', 'error');
-
-            const saleData = {
-                projectName: document.getElementById('sale-name').value,
-                materialId: matId,
-                gramsUsed: grams,
-                hours: Number(document.getElementById('sale-hours').value || 0),
-                price: Number(document.getElementById('sale-price').value),
-                date: new Date().toISOString().split('T')[0],
-                isFromStock: false
-            };
-            
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: Number(m.currentWeight) - grams });
-            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), saleData);
-            e.target.reset();
-            showToast('Venta registrada');
-        });
-
-        document.getElementById('form-expense').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'expenses'), {
-                type: document.getElementById('exp-type').value,
-                description: document.getElementById('exp-desc').value,
-                cost: Number(document.getElementById('exp-cost').value),
-                date: new Date().toISOString().split('T')[0]
-            });
-            e.target.reset();
-            showToast('Gasto registrado');
-        });
-
-        // Super Delete que restaura stock y gramos de forma inteligente
-        window.deleteDocItem = async (col, id, matId = null, grams = 0, isFromStock = false, prodId = null) => {
-            if(confirm('¿Seguro que quieres borrar esto de forma permanente?')) {
-                try {
-                    // Si estamos borrando una venta, comprobamos si hay que devolver cosas a la estantería
-                    if (col === 'sales') {
-                        if (isFromStock && prodId && prodId !== 'undefined') {
-                            const p = products.find(x => x.id === prodId);
-                            if(p) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock || 0) + 1 });
-                        } else if (matId && matId !== 'undefined') {
-                            const m = materials.find(x => x.id === matId);
-                            if(m) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: Number(m.currentWeight) + Number(grams) });
-                        }
-                    }
-                    
-                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, col, id));
-                    showToast('Elemento borrado correctamente');
-                } catch (e) {
-                    showToast('Hubo un error al borrar', 'error');
-                }
+        function renderMonthlyChart() {
+            const months = [];
+            const now = new Date();
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push({ key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: d.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' }) });
             }
-        };
-
-        window.fabricateProduct = async (prodId) => {
-            const p = products.find(x => x.id === prodId);
-            if(!p) return;
-            const m = materials.find(x => x.id === p.materialId);
-            
-            if(!m) return showToast('Filamento no encontrado', 'error');
-            if(m.currentWeight < p.weight) return showToast('No hay suficiente filamento en la bobina', 'error');
-            
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', m.id), { currentWeight: Number(m.currentWeight) - Number(p.weight) });
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock || 0) + 1 });
-            showToast(`Fabricado: +1 ${p.name}`);
-        };
-
-        window.sellProduct = async (prodId) => {
-            const p = products.find(x => x.id === prodId);
-            if(!p || Number(p.stock) < 1) return showToast('No hay stock para vender', 'error');
-
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock) - 1 });
-            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), {
-                projectName: `Venta: ${p.name}`, 
-                materialId: p.materialId, 
-                productId: prodId,
-                gramsUsed: p.weight, 
-                hours: p.hours || 0,
-                price: p.price, 
-                date: new Date().toISOString().split('T')[0],
-                isFromStock: true
+            const stats = months.map(mo => {
+                const revenue = sales.filter(s => (s.date || '').startsWith(mo.key)).reduce((a, s) => a + Number(s.price || 0), 0);
+                const expense = expenses.filter(e => (e.date || '').startsWith(mo.key)).reduce((a, e) => a + Number(e.cost || 0), 0);
+                return { ...mo, revenue, expense };
             });
-            showToast(`Vendido: ${p.name} por ${p.price}€`);
-        };
-        
-        window.adjustStock = async (prodId, change) => {
-            const p = products.find(x => x.id === prodId);
-            if(!p) return;
-            const newStock = Number(p.stock || 0) + change;
-            if(newStock < 0) return showToast('El stock no puede ser negativo', 'error');
-            
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: newStock });
-            showToast(`Stock ajustado manualmente`);
-        };
+            const max = Math.max(1, ...stats.map(s => Math.max(s.revenue, s.expense)));
+
+            document.getElementById('dashboard-monthly').innerHTML = stats.map(s => `
+                <div>
+                    <div class="flex justify-between text-xs text-slate-500 mb-1">
+                        <span class="font-medium capitalize">${s.label}</span>
+                        <span>${s.revenue.toFixed(0)}€ / -${s.expense.toFixed(0)}€</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded h-2 mb-1">
+                        <div class="h-2 rounded bg-indigo-500" style="width: ${(s.revenue / max) * 100}%"></div>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded h-2">
+                        <div class="h-2 rounded bg-orange-400" style="width: ${(s.expense / max) * 100}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ---------- BACKUP ----------
+        document.getElementById('btn-backup')?.addEventListener('click', () => {
+            const backup = {
+                exportedAt: new Date().toISOString(),
+                materials, products, sales, expenses, cashSessions
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `zri-d-studio-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            showToast('Copia de seguridad descargada');
+        });
     </script>
 </body>
 </html>
