@@ -43,13 +43,13 @@
 
     <div id="notification-container"></div>
 
-    <!-- PANTALLA DE LOGIN -->
+    <!-- PANTALLA DE LOGIN (Sin botón de registro por seguridad) -->
     <div id="auth-view" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
         <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full border border-slate-200">
             <div class="text-center mb-8">
                 <i class="fa-solid fa-cube text-4xl text-indigo-600 mb-3"></i>
                 <h1 class="text-2xl font-bold text-slate-800">ZRI D STUDIO</h1>
-                <p class="text-slate-500 text-sm mt-1">Acceso al panel de gestión</p>
+                <p class="text-slate-500 text-sm mt-1">Acceso seguro al panel de gestión</p>
             </div>
 
             <form id="auth-form" class="space-y-4">
@@ -62,8 +62,8 @@
                     <input type="password" id="auth-password" required class="w-full border border-slate-300 rounded-md p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" placeholder="••••••••">
                 </div>
                 
-                <div class="flex gap-3 pt-2">
-                    <button type="button" id="btn-login" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-md transition-colors">
+                <div class="pt-2">
+                    <button type="button" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-md transition-colors">
                         Iniciar Sesión
                     </button>
                 </div>
@@ -106,8 +106,9 @@
                 <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-6">
                     <i class="fa-solid fa-chart-pie text-indigo-600"></i> Estado Financiero y Operativo
                 </h2>
+                
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="dashboard-cards">
-                    <!-- Se llena por JS -->
+                    <!-- Tarjetas de métricas se llenan por JS -->
                 </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -116,7 +117,7 @@
                             <i class="fa-solid fa-boxes-stacked text-slate-500"></i> Niveles de Filamento
                         </h3>
                         <div class="grid grid-cols-1 gap-4" id="dashboard-stock">
-                            <!-- Se llena por JS -->
+                            <!-- Progreso de bobinas se llena por JS -->
                         </div>
                     </div>
 
@@ -125,7 +126,7 @@
                             <i class="fa-solid fa-store text-slate-500"></i> Valor del Stock Fabricado
                         </h3>
                         <div id="dashboard-catalog-stock">
-                            <!-- Se llena por JS -->
+                            <!-- Stock de catálogo se llena por JS -->
                         </div>
                     </div>
                 </div>
@@ -158,7 +159,7 @@
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[600px]">
                         <thead class="bg-slate-50 text-slate-600 text-sm">
-                            <tr><th class="p-4 border-b">Material</th><th class="p-4 border-b">Color/Tipo</th><th class="p-4 border-b">Stock</th><th class="p-4 border-b">Coste</th><th class="p-4 border-b text-right">Acciones</th></tr>
+                            <tr><th class="p-4 border-b">Material</th><th class="p-4 border-b">Color/Tipo</th><th class="p-4 border-b">Stock Actual</th><th class="p-4 border-b">Coste Bobina</th><th class="p-4 border-b text-right">Acciones</th></tr>
                         </thead>
                         <tbody id="table-materials" class="text-sm"></tbody>
                     </table>
@@ -169,27 +170,35 @@
             <div id="view-catalog" class="view-section hidden">
                 <h2 class="text-2xl font-bold text-slate-800 mb-6">Catálogo y Stock de Productos</h2>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-                    <h3 class="text-lg font-semibold mb-4">Crear nuevo modelo para vender</h3>
-                    <form id="form-product" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <h3 class="text-lg font-semibold mb-4">Diseñar nuevo producto</h3>
+                    <form id="form-product" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                         <input required type="text" id="prod-name" placeholder="Nombre (ej. Llavero Logo)" class="lg:col-span-2 border rounded-md p-2">
                         <select required id="prod-material" class="border rounded-md p-2 bg-white material-select">
                             <option value="">Cargando filamentos...</option>
                         </select>
                         <div class="flex relative">
-                            <input required type="number" id="prod-weight" placeholder="Peso pieza" class="border rounded-md p-2 w-full pr-8">
+                            <input required type="number" id="prod-weight" placeholder="Gramos" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">g</span>
                         </div>
                         <div class="flex relative">
-                            <input required type="number" step="0.01" id="prod-price" placeholder="Precio Venta" class="border rounded-md p-2 w-full pr-8">
+                            <input required type="number" step="0.5" id="prod-hours" placeholder="Horas" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">hrs</span>
+                        </div>
+                        <div class="flex relative">
+                            <input required type="number" step="0.01" id="prod-price" placeholder="PVP" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
                         </div>
-                        <button type="submit" class="lg:col-span-5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md transition-colors">
+                        <div class="flex relative lg:col-span-2">
+                            <span class="absolute left-3 top-2.5 text-slate-500 text-sm">Stock inicial:</span>
+                            <input required type="number" id="prod-stock" value="0" class="border rounded-md p-2 pl-24 w-full">
+                        </div>
+                        <button type="submit" class="lg:col-span-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md transition-colors">
                             <i class="fa-solid fa-plus mr-2"></i>Añadir al Catálogo
                         </button>
                     </form>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="catalog-cards">
-                    <!-- Se llena por JS -->
+                    <!-- Tarjetas de catálogo llenadas por JS -->
                 </div>
             </div>
 
@@ -197,27 +206,31 @@
             <div id="view-sales" class="view-section hidden">
                 <h2 class="text-2xl font-bold text-slate-800 mb-6">Registro de Ventas a Medida</h2>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-                    <h3 class="text-lg font-semibold mb-4 text-slate-600 text-sm">Usa esto para encargos personalizados. Para productos en stock, véndelos desde el Catálogo.</h3>
-                    <form id="form-sale" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-600 text-sm">Usa esto para encargos personalizados. Las ventas del Catálogo se hacen desde la otra pestaña.</h3>
+                    <form id="form-sale" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                         <input required type="text" id="sale-name" placeholder="Proyecto o Cliente" class="lg:col-span-2 border rounded-md p-2">
                         <select required id="sale-material" class="border rounded-md p-2 bg-white material-select"></select>
                         <div class="flex relative">
-                            <input required type="number" id="sale-weight" placeholder="Material usado" class="border rounded-md p-2 w-full pr-8">
+                            <input required type="number" id="sale-weight" placeholder="Consumo" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">g</span>
                         </div>
                         <div class="flex relative">
-                            <input required type="number" step="0.01" id="sale-price" placeholder="Precio cobrado" class="border rounded-md p-2 w-full pr-8">
+                            <input required type="number" step="0.5" id="sale-hours" placeholder="Horas" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">hrs</span>
+                        </div>
+                        <div class="flex relative">
+                            <input required type="number" step="0.01" id="sale-price" placeholder="Cobrado" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
                         </div>
-                        <button type="submit" class="lg:col-span-5 bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-md transition-colors">
-                            <i class="fa-solid fa-check mr-2"></i>Registrar Venta
+                        <button type="submit" class="lg:col-span-6 bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-md transition-colors">
+                            <i class="fa-solid fa-check mr-2"></i>Registrar Venta Personalizada
                         </button>
                     </form>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[600px]">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
                         <thead class="bg-slate-50 text-slate-600 text-sm">
-                            <tr><th class="p-4 border-b">Fecha</th><th class="p-4 border-b">Concepto</th><th class="p-4 border-b">Material</th><th class="p-4 border-b">Ingreso</th><th class="p-4 border-b text-right">Acciones</th></tr>
+                            <tr><th class="p-4 border-b">Fecha</th><th class="p-4 border-b">Proyecto</th><th class="p-4 border-b">Consumo</th><th class="p-4 border-b">Tiempo</th><th class="p-4 border-b">Ingreso</th><th class="p-4 border-b text-right">Acciones</th></tr>
                         </thead>
                         <tbody id="table-sales" class="text-sm"></tbody>
                     </table>
@@ -257,10 +270,10 @@
     <!-- Scripts de Firebase y Lógica de la App -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // TU CONFIGURACIÓN
+        // TUS CLAVES OFICIALES
         const firebaseConfig = {
             apiKey: "AIzaSyBpFpC-r6ew1jBv9FoIEPUpGN5Pp159mFg",
             authDomain: "zridistudio.firebaseapp.com",
@@ -279,9 +292,8 @@
         let sales = [];
         let expenses = [];
         let products = [];
-        const APP_ID = 'zrid-studio-app';
+        const APP_ID = 'zrid-studio-app'; // Mantengo esta ID para que NO pierdas tus datos guardados
 
-        // LÓGICA DE AUTENTICACIÓN
         const authView = document.getElementById('auth-view');
         const appView = document.getElementById('app-view');
         const emailInput = document.getElementById('auth-email');
@@ -292,7 +304,7 @@
                 await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
                 showToast('Sesión iniciada correctamente', 'success');
             } catch (error) {
-                showToast('Error al iniciar sesión: Revisa tus datos', 'error');
+                showToast('Error: Correo o contraseña incorrectos', 'error');
             }
         });
 
@@ -301,13 +313,12 @@
             showToast('Sesión cerrada', 'success');
         });
 
-        // ESCUCHADOR DE SESIÓN
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 CURRENT_USER_ID = user.uid;
                 authView.classList.add('hidden');
                 appView.classList.remove('hidden');
-                initDataListeners(); // Cargar datos solo cuando hay sesión
+                initDataListeners(); 
             } else {
                 CURRENT_USER_ID = null;
                 authView.classList.remove('hidden');
@@ -315,7 +326,6 @@
             }
         });
 
-        // FUNCIONES DE INTERFAZ
         window.switchTab = function(tabId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
@@ -337,11 +347,9 @@
             }, 3000);
         }
 
-        // CARGA DE DATOS DESDE FIREBASE
         let unsubMaterials, unsubSales, unsubExpenses, unsubProducts;
 
         function initDataListeners() {
-            // Limpiar listeners anteriores si los hubiera
             if(unsubMaterials) unsubMaterials();
             if(unsubSales) unsubSales();
             if(unsubExpenses) unsubExpenses();
@@ -356,7 +364,7 @@
                 materials = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 updateMaterialUI();
                 updateDashboard();
-            }, (err) => showToast('Error cargando materiales. Revisa Firebase Rules.', 'error'));
+            });
 
             unsubSales = onSnapshot(salesRef, (snap) => {
                 sales = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
@@ -373,10 +381,10 @@
             unsubProducts = onSnapshot(prodRef, (snap) => {
                 products = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 updateCatalogUI();
+                updateDashboard(); // ESTA LÍNEA ES VITAL para que el stock se actualice en el resumen
             });
         }
 
-        // RENDERIZADO UI
         function updateMaterialUI() {
             const selects = document.querySelectorAll('.material-select');
             selects.forEach(select => {
@@ -390,23 +398,9 @@
                     <td class="p-4">${m.color} - ${m.type}</td>
                     <td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-semibold ${m.currentWeight < 200 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${m.currentWeight}g / ${m.totalWeight}g</span></td>
                     <td class="p-4">${Number(m.cost).toFixed(2)} €</td>
-                    <td class="p-4 text-right"><button onclick="deleteDocItem('materials', '${m.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                    <td class="p-4 text-right"><button onclick="window.deleteDocItem('materials', '${m.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>
             `).join('') || `<tr><td colSpan="5" class="p-8 text-center text-slate-500">No hay bobinas registradas.</td></tr>`;
-        }
-
-        function updateSalesUI() {
-            document.getElementById('table-sales').innerHTML = sales.map(s => {
-                const m = materials.find(x => x.id === s.materialId) || {name: 'Desconocido', color: ''};
-                return `
-                <tr class="border-b hover:bg-slate-50">
-                    <td class="p-4 text-slate-500">${s.date}</td>
-                    <td class="p-4 font-medium">${s.projectName}</td>
-                    <td class="p-4">${s.gramsUsed}g <span class="text-xs text-slate-400 block">${m.name}</span></td>
-                    <td class="p-4 font-semibold text-green-600">+${Number(s.price).toFixed(2)} €</td>
-                    <td class="p-4 text-right"><button onclick="deleteDocItem('sales', '${m.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
-                </tr>
-            `}).join('') || `<tr><td colSpan="5" class="p-8 text-center text-slate-500">No hay ventas registradas.</td></tr>`;
         }
 
         function updateExpensesUI() {
@@ -416,29 +410,51 @@
                     <td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded text-xs">${e.type}</span></td>
                     <td class="p-4 font-medium">${e.description}</td>
                     <td class="p-4 font-semibold text-orange-600">-${Number(e.cost).toFixed(2)} €</td>
-                    <td class="p-4 text-right"><button onclick="deleteDocItem('expenses', '${e.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                    <td class="p-4 text-right"><button onclick="window.deleteDocItem('expenses', '${e.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>
             `).join('') || `<tr><td colSpan="5" class="p-8 text-center text-slate-500">No hay gastos registrados.</td></tr>`;
+        }
+
+        function updateSalesUI() {
+            document.getElementById('table-sales').innerHTML = sales.map(s => {
+                const m = materials.find(x => x.id === s.materialId) || {name: 'Borrado', color: ''};
+                return `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-4 text-slate-500">${s.date}</td>
+                    <td class="p-4 font-medium">
+                        ${s.isFromStock ? '<span class="inline-block bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded mr-2 uppercase tracking-wide">Stock</span>' : ''}
+                        ${s.projectName}
+                    </td>
+                    <td class="p-4">${s.gramsUsed}g <span class="text-xs text-slate-400 block">${m.name} ${m.color}</span></td>
+                    <td class="p-4">${s.hours || 0} h</td>
+                    <td class="p-4 font-semibold text-green-600">+${Number(s.price).toFixed(2)} €</td>
+                    <td class="p-4 text-right">
+                        <button onclick="window.deleteDocItem('sales', '${s.id}', '${s.materialId}', ${s.gramsUsed}, ${s.isFromStock || false}, '${s.productId || ''}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `}).join('') || `<tr><td colSpan="6" class="p-8 text-center text-slate-500">No hay ventas registradas.</td></tr>`;
         }
 
         function updateCatalogUI() {
             document.getElementById('catalog-cards').innerHTML = products.map(p => {
                 const m = materials.find(x => x.id === p.materialId);
-                const matCost = m ? (m.cost / m.totalWeight) * p.weight : 0;
+                const matCost = (m && m.totalWeight > 0) ? (m.cost / m.totalWeight) * p.weight : 0;
                 const profit = p.price - matCost;
+                const currentStock = Number(p.stock || 0);
                 
                 return `
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col h-full">
                     <div class="flex justify-between items-start mb-2">
                         <h4 class="font-bold text-slate-800 text-lg">${p.name}</h4>
-                        <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-1 rounded-full">Stock: ${p.stock}</span>
+                        <span class="${currentStock > 0 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-500'} text-xs font-bold px-2 py-1 rounded-full">Stock: ${currentStock}</span>
                     </div>
                     <div class="text-sm text-slate-500 mb-4 flex-grow">
                         <p><i class="fa-solid fa-weight-hanging w-4"></i> ${p.weight}g (${m ? m.color : '?'})</p>
-                        <p><i class="fa-solid fa-coins w-4"></i> Coste: <span class="text-red-500">${matCost.toFixed(2)}€</span></p>
-                        <p><i class="fa-solid fa-tag w-4"></i> Venta: <span class="text-green-600 font-bold">${Number(p.price).toFixed(2)}€</span></p>
+                        <p><i class="fa-regular fa-clock w-4"></i> ${p.hours || 0}h de impresión</p>
+                        <p><i class="fa-solid fa-coins w-4"></i> Coste base: <span class="text-red-500">${matCost.toFixed(2)}€</span></p>
+                        <p><i class="fa-solid fa-tag w-4"></i> PVP: <span class="text-green-600 font-bold">${Number(p.price).toFixed(2)}€</span></p>
                         <div class="mt-2 pt-2 border-t border-slate-100">
-                            <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">Beneficio Limpio</span>
+                            <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">Margen de Beneficio</span>
                             <p class="text-lg font-bold text-indigo-600">+${profit.toFixed(2)}€</p>
                         </div>
                     </div>
@@ -446,37 +462,38 @@
                         <button onclick="window.fabricateProduct('${p.id}', '${p.materialId}', ${p.weight})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded font-medium text-sm transition-colors">
                             <i class="fa-solid fa-hammer"></i> Fabricar
                         </button>
-                        <button onclick="window.sellProduct('${p.id}', '${p.name}', '${p.materialId}', ${p.weight}, ${p.price})" class="bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded font-medium text-sm transition-colors ${p.stock < 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${p.stock < 1 ? 'disabled' : ''}>
+                        <button onclick="window.sellProduct('${p.id}', '${p.name}', '${p.materialId}', ${p.weight}, ${p.price})" class="bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded font-medium text-sm transition-colors ${currentStock < 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${currentStock < 1 ? 'disabled' : ''}>
                             <i class="fa-solid fa-cart-shopping"></i> Vender
                         </button>
                     </div>
+                    <button onclick="window.deleteDocItem('products', '${p.id}')" class="mt-3 text-xs text-red-400 hover:text-red-600 text-center w-full transition-colors">Eliminar del catálogo</button>
                 </div>
             `}).join('') || `<div class="col-span-full p-8 text-center text-slate-500 border-2 border-dashed rounded-xl">No tienes productos en el catálogo.</div>`;
         }
 
         function updateDashboard() {
-            const matCost = materials.reduce((acc, m) => acc + Number(m.cost), 0);
-            const eqCost = expenses.reduce((acc, e) => acc + Number(e.cost), 0);
-            const rev = sales.reduce((acc, s) => acc + Number(s.price), 0);
+            const matCost = materials.reduce((acc, m) => acc + Number(m.cost || 0), 0);
+            const eqCost = expenses.reduce((acc, e) => acc + Number(e.cost || 0), 0);
+            const rev = sales.reduce((acc, s) => acc + Number(s.price || 0), 0);
             const bal = rev - (matCost + eqCost);
             const totalStockValue = products.reduce((acc, p) => acc + (Number(p.stock || 0) * Number(p.price || 0)), 0);
 
             document.getElementById('dashboard-cards').innerHTML = `
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center space-x-4">
                     <div class="p-3 bg-green-100 text-green-600 rounded-full"><i class="fa-solid fa-sack-dollar text-xl"></i></div>
-                    <div><p class="text-xs font-medium text-slate-500 uppercase">Ingresos</p><p class="text-xl font-bold">${rev.toFixed(2)} €</p></div>
+                    <div><p class="text-xs font-medium text-slate-500 uppercase">Ingresos Totales</p><p class="text-xl font-bold">${rev.toFixed(2)} €</p></div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center space-x-4">
                     <div class="p-3 bg-purple-100 text-purple-600 rounded-full"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
-                    <div><p class="text-xs font-medium text-slate-500 uppercase">Filamentos</p><p class="text-xl font-bold">${matCost.toFixed(2)} €</p></div>
+                    <div><p class="text-xs font-medium text-slate-500 uppercase">Gasto Materiales</p><p class="text-xl font-bold">${matCost.toFixed(2)} €</p></div>
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center space-x-4">
                     <div class="p-3 bg-orange-100 text-orange-600 rounded-full"><i class="fa-solid fa-wrench text-xl"></i></div>
-                    <div><p class="text-xs font-medium text-slate-500 uppercase">Máquinas</p><p class="text-xl font-bold">${eqCost.toFixed(2)} €</p></div>
+                    <div><p class="text-xs font-medium text-slate-500 uppercase">Gasto Máquinas</p><p class="text-xl font-bold">${eqCost.toFixed(2)} €</p></div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center space-x-4 ${bal >= 0 ? 'bg-indigo-50' : 'bg-red-50'}">
+                <div class="rounded-xl shadow-sm border p-5 flex items-center space-x-4 ${bal >= 0 ? 'bg-indigo-50 border-indigo-200' : 'bg-red-50 border-red-200'}">
                     <div class="p-3 rounded-full ${bal >= 0 ? 'bg-indigo-100 text-indigo-600' : 'bg-red-100 text-red-600'}"><i class="fa-solid fa-chart-line text-xl"></i></div>
-                    <div><p class="text-xs font-medium text-slate-500 uppercase">Balance</p><p class="text-xl font-bold ${bal >= 0 ? 'text-indigo-600' : 'text-red-600'}">${bal.toFixed(2)} €</p></div>
+                    <div><p class="text-xs font-medium text-slate-600 uppercase">Balance Limpio</p><p class="text-xl font-bold ${bal >= 0 ? 'text-indigo-700' : 'text-red-600'}">${bal.toFixed(2)} €</p></div>
                 </div>
             `;
 
@@ -489,9 +506,9 @@
                         <div class="h-2 rounded-full transition-all ${p < 20 ? 'bg-red-500' : p < 50 ? 'bg-orange-400' : 'bg-indigo-500'}" style="width: ${p}%"></div>
                     </div>
                 </div>
-            `}).join('') || '<p class="text-slate-500">No hay materiales.</p>';
+            `}).join('') || '<p class="text-slate-500 text-sm">No hay bobinas registradas.</p>';
 
-            const inStockProducts = products.filter(p => p.stock > 0);
+            const inStockProducts = products.filter(p => Number(p.stock) > 0);
             document.getElementById('dashboard-catalog-stock').innerHTML = `
                 <div class="flex items-center space-x-4 mb-6">
                     <div class="p-4 bg-blue-50 text-blue-600 rounded-xl border border-blue-100"><i class="fa-solid fa-tag text-2xl"></i></div>
@@ -507,12 +524,11 @@
                             <span class="bg-slate-100 px-2 py-1 rounded text-slate-600 font-semibold">${p.stock} uds.</span>
                         </div>
                     `).join('')}
-                    ${inStockProducts.length === 0 ? '<p class="text-sm text-slate-500">No hay productos en stock.</p>' : ''}
+                    ${inStockProducts.length === 0 ? '<p class="text-sm text-slate-500">Las estanterías están vacías.</p>' : ''}
                 </div>
             `;
         }
 
-        // ACCIONES DE FORMULARIOS FIREBASE
         document.getElementById('form-material').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = {
@@ -528,6 +544,20 @@
             showToast('Bobina guardada');
         });
 
+        document.getElementById('form-product').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products'), {
+                name: document.getElementById('prod-name').value,
+                materialId: document.getElementById('prod-material').value,
+                weight: Number(document.getElementById('prod-weight').value),
+                hours: Number(document.getElementById('prod-hours').value || 0),
+                price: Number(document.getElementById('prod-price').value),
+                stock: Number(document.getElementById('prod-stock').value || 0)
+            });
+            e.target.reset();
+            showToast('Producto añadido al catálogo');
+        });
+
         document.getElementById('form-sale').addEventListener('submit', async (e) => {
             e.preventDefault();
             const matId = document.getElementById('sale-material').value;
@@ -540,11 +570,13 @@
                 projectName: document.getElementById('sale-name').value,
                 materialId: matId,
                 gramsUsed: grams,
+                hours: Number(document.getElementById('sale-hours').value || 0),
                 price: Number(document.getElementById('sale-price').value),
-                date: new Date().toISOString().split('T')[0]
+                date: new Date().toISOString().split('T')[0],
+                isFromStock: false
             };
             
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: m.currentWeight - grams });
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: Number(m.currentWeight) - grams });
             await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), saleData);
             e.target.reset();
             showToast('Venta registrada');
@@ -562,24 +594,26 @@
             showToast('Gasto registrado');
         });
 
-        document.getElementById('form-product').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products'), {
-                name: document.getElementById('prod-name').value,
-                materialId: document.getElementById('prod-material').value,
-                weight: Number(document.getElementById('prod-weight').value),
-                price: Number(document.getElementById('prod-price').value),
-                stock: 0
-            });
-            e.target.reset();
-            showToast('Producto añadido al catálogo');
-        });
-
-        // ACCIONES GLOBALES EXPORTADAS
-        window.deleteDocItem = async (col, id) => {
-            if(confirm('¿Seguro que quieres borrar esto?')) {
-                await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, col, id));
-                showToast('Elemento borrado');
+        // Super Delete que restaura stock y gramos de forma inteligente
+        window.deleteDocItem = async (col, id, matId = null, grams = 0, isFromStock = false, prodId = null) => {
+            if(confirm('¿Seguro que quieres borrar esto de forma permanente?')) {
+                try {
+                    // Si estamos borrando una venta, comprobamos si hay que devolver cosas a la estantería
+                    if (col === 'sales') {
+                        if (isFromStock && prodId && prodId !== 'undefined') {
+                            const p = products.find(x => x.id === prodId);
+                            if(p) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock || 0) + 1 });
+                        } else if (matId && matId !== 'undefined') {
+                            const m = materials.find(x => x.id === matId);
+                            if(m) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: Number(m.currentWeight) + Number(grams) });
+                        }
+                    }
+                    
+                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, col, id));
+                    showToast('Elemento borrado correctamente');
+                } catch (e) {
+                    showToast('Hubo un error al borrar', 'error');
+                }
             }
         };
 
@@ -589,18 +623,25 @@
             if(!m) return showToast('Filamento no encontrado', 'error');
             if(m.currentWeight < weight) return showToast('No hay suficiente filamento en la bobina', 'error');
             
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: m.currentWeight - weight });
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: p.stock + 1 });
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: Number(m.currentWeight) - Number(weight) });
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock || 0) + 1 });
             showToast(`Fabricado: +1 ${p.name}`);
         };
 
         window.sellProduct = async (prodId, name, matId, weight, price) => {
             const p = products.find(x => x.id === prodId);
-            if(p.stock < 1) return;
+            if(!p || Number(p.stock) < 1) return;
 
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: p.stock - 1 });
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock) - 1 });
             await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), {
-                projectName: `Venta Catálogo: ${name}`, materialId: matId, gramsUsed: weight, price: price, date: new Date().toISOString().split('T')[0]
+                projectName: `Venta: ${name}`, 
+                materialId: matId, 
+                productId: prodId,
+                gramsUsed: weight, 
+                hours: p.hours || 0,
+                price: price, 
+                date: new Date().toISOString().split('T')[0],
+                isFromStock: true
             });
             showToast(`Vendido: ${name} por ${price}€`);
         };
