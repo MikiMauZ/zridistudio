@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zri D Studio - Gestor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .tab-btn.active { background-color: #4f46e5; color: white; }
+        .tab-btn { background-color: transparent; color: #cbd5e1; }
+        .tab-btn:hover:not(.active) { background-color: #6366f1; color: white; }
+        
+        /* Notificaciones */
+        #notification-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background-color: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease-out;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <div id="notification-container"></div>
+
+    <!-- PANTALLA DE LOGIN -->
+    <div id="auth-view" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full border border-slate-200">
+            <div class="text-center mb-8">
+                <i class="fa-solid fa-cube text-4xl text-indigo-600 mb-3"></i>
+                <h1 class="text-2xl font-bold text-slate-800">ZRI D STUDIO</h1>
+                <p class="text-slate-500 text-sm mt-1">Acceso al panel de gestión</p>
+            </div>
+
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Correo electrónico</label>
+                    <input type="email" id="auth-email" required class="w-full border border-slate-300 rounded-md p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" placeholder="admin@zridstudio.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
+                    <input type="password" id="auth-password" required class="w-full border border-slate-300 rounded-md p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" placeholder="••••••••">
+                </div>
+                
+                <div class="flex gap-3 pt-2">
+                    <button type="button" id="btn-login" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-md transition-colors">
+                        Iniciar Sesión
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- APLICACIÓN PRINCIPAL (Oculta por defecto) -->
+    <div id="app-view" class="hidden">
+        <!-- Navegación -->
+        <nav class="bg-indigo-900 text-white shadow-md sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between py-3 sm:h-16 gap-3">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-cube text-xl"></i>
+                        <span class="font-bold text-xl tracking-wider">ZRI D STUDIO</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 items-center">
+                        <button onclick="switchTab('dashboard')" class="tab-btn active px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-dashboard">Resumen</button>
+                        <button onclick="switchTab('inventory')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-inventory">Bobinas</button>
+                        <button onclick="switchTab('catalog')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-catalog">Catálogo</button>
+                        <button onclick="switchTab('sales')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-sales">Ventas</button>
+                        <button onclick="switchTab('expenses')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-expenses">Gastos</button>
+                        
+                        <!-- Botón Salir -->
+                        <div class="w-px h-6 bg-indigo-700 mx-2 hidden sm:block"></div>
+                        <button id="btn-logout" class="ml-2 text-indigo-200 hover:text-white transition-colors p-1.5" title="Cerrar sesión">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Contenedor Principal -->
+        <main class="max-w-7xl mx-auto px-4 py-8 mb-12">
+            
+            <!-- CONTENEDOR DASHBOARD -->
+            <div id="view-dashboard" class="view-section">
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-6">
+                    <i class="fa-solid fa-chart-pie text-indigo-600"></i> Estado Financiero
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="dashboard-cards">
+                    <!-- Se llena por JS -->
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-stacked text-slate-500"></i> Niveles de Filamento
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-stock">
+                        <!-- Se llena por JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR BOBINAS -->
+            <div id="view-inventory" class="view-section hidden">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Inventario de Bobinas</h2>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Añadir nueva bobina</h3>
+                    <form id="form-material" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                        <input required type="text" id="mat-name" placeholder="Nombre (ej. PLA Premium)" class="lg:col-span-2 border rounded-md p-2">
+                        <input required type="text" id="mat-color" placeholder="Color" class="border rounded-md p-2">
+                        <select id="mat-type" class="border rounded-md p-2 bg-white">
+                            <option value="PLA">PLA</option><option value="PETG">PETG</option><option value="ABS">ABS</option><option value="TPU">TPU</option>
+                        </select>
+                        <div class="flex relative">
+                            <input required type="number" id="mat-weight" placeholder="Peso" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">g</span>
+                        </div>
+                        <div class="flex relative">
+                            <input required type="number" step="0.01" id="mat-cost" placeholder="Coste" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
+                        </div>
+                        <button type="submit" class="lg:col-span-6 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md transition-colors">
+                            <i class="fa-solid fa-plus mr-2"></i>Registrar Bobina
+                        </button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-slate-50 text-slate-600 text-sm">
+                            <tr><th class="p-4 border-b">Material</th><th class="p-4 border-b">Color/Tipo</th><th class="p-4 border-b">Stock</th><th class="p-4 border-b">Coste</th><th class="p-4 border-b text-right">Acciones</th></tr>
+                        </thead>
+                        <tbody id="table-materials" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR CATÁLOGO -->
+            <div id="view-catalog" class="view-section hidden">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Catálogo y Stock de Productos</h2>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Crear nuevo modelo para vender</h3>
+                    <form id="form-product" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <input required type="text" id="prod-name" placeholder="Nombre (ej. Llavero Logo)" class="lg:col-span-2 border rounded-md p-2">
+                        <select required id="prod-material" class="border rounded-md p-2 bg-white material-select">
+                            <option value="">Cargando filamentos...</option>
+                        </select>
+                        <div class="flex relative">
+                            <input required type="number" id="prod-weight" placeholder="Peso pieza" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">g</span>
+                        </div>
+                        <div class="flex relative">
+                            <input required type="number" step="0.01" id="prod-price" placeholder="Precio Venta" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
+                        </div>
+                        <button type="submit" class="lg:col-span-5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md transition-colors">
+                            <i class="fa-solid fa-plus mr-2"></i>Añadir al Catálogo
+                        </button>
+                    </form>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="catalog-cards">
+                    <!-- Se llena por JS -->
+                </div>
+            </div>
+
+            <!-- CONTENEDOR VENTAS -->
+            <div id="view-sales" class="view-section hidden">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Registro de Ventas a Medida</h2>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-600 text-sm">Usa esto para encargos personalizados. Para productos en stock, véndelos desde el Catálogo.</h3>
+                    <form id="form-sale" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <input required type="text" id="sale-name" placeholder="Proyecto o Cliente" class="lg:col-span-2 border rounded-md p-2">
+                        <select required id="sale-material" class="border rounded-md p-2 bg-white material-select"></select>
+                        <div class="flex relative">
+                            <input required type="number" id="sale-weight" placeholder="Material usado" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">g</span>
+                        </div>
+                        <div class="flex relative">
+                            <input required type="number" step="0.01" id="sale-price" placeholder="Precio cobrado" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
+                        </div>
+                        <button type="submit" class="lg:col-span-5 bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-md transition-colors">
+                            <i class="fa-solid fa-check mr-2"></i>Registrar Venta
+                        </button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-slate-50 text-slate-600 text-sm">
+                            <tr><th class="p-4 border-b">Fecha</th><th class="p-4 border-b">Concepto</th><th class="p-4 border-b">Material</th><th class="p-4 border-b">Ingreso</th><th class="p-4 border-b text-right">Acciones</th></tr>
+                        </thead>
+                        <tbody id="table-sales" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR GASTOS -->
+            <div id="view-expenses" class="view-section hidden">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Maquinaria y Mantenimiento</h2>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <form id="form-expense" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <select id="exp-type" class="border rounded-md p-2 bg-white">
+                            <option value="Máquina">Impresora 3D</option><option value="Repuesto">Repuestos</option><option value="Otros">Otros</option>
+                        </select>
+                        <input required type="text" id="exp-desc" placeholder="Descripción (ej. Cama PEI)" class="lg:col-span-3 border rounded-md p-2">
+                        <div class="flex relative">
+                            <input required type="number" step="0.01" id="exp-cost" placeholder="Coste" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
+                        </div>
+                        <button type="submit" class="lg:col-span-5 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 rounded-md transition-colors">
+                            <i class="fa-solid fa-wrench mr-2"></i>Registrar Gasto
+                        </button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-slate-50 text-slate-600 text-sm">
+                            <tr><th class="p-4 border-b">Fecha</th><th class="p-4 border-b">Tipo</th><th class="p-4 border-b">Descripción</th><th class="p-4 border-b">Coste</th><th class="p-4 border-b text-right">Acciones</th></tr>
+                        </thead>
+                        <tbody id="table-expenses" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts de Firebase y Lógica de la App -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // TU CONFIGURACIÓN
+        const firebaseConfig = {
+            apiKey: "AIzaSyBpFpC-r6ew1jBv9FoIEPUpGN5Pp159mFg",
+            authDomain: "zridistudio.firebaseapp.com",
+            projectId: "zridistudio",
+            storageBucket: "zridistudio.firebasestorage.app",
+            messagingSenderId: "715409609557",
+            appId: "1:715409609557:web:608684a681a93359e895dc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let CURRENT_USER_ID = null;
+        let materials = [];
+        let sales = [];
+        let expenses = [];
+        let products = [];
+        const APP_ID = 'zrid-studio-app';
+
+        // LÓGICA DE AUTENTICACIÓN
+        const authView = document.getElementById('auth-view');
+        const appView = document.getElementById('app-view');
+        const emailInput = document.getElementById('auth-email');
+        const passwordInput = document.getElementById('auth-password');
+
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            try {
+                await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+                showToast('Sesión iniciada correctamente', 'success');
+            } catch (error) {
+                showToast('Error al iniciar sesión: Revisa tus datos', 'error');
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth);
+            showToast('Sesión cerrada', 'success');
+        });
+
+        // ESCUCHADOR DE SESIÓN
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                CURRENT_USER_ID = user.uid;
+                authView.classList.add('hidden');
+                appView.classList.remove('hidden');
+                initDataListeners(); // Cargar datos solo cuando hay sesión
+            } else {
+                CURRENT_USER_ID = null;
+                authView.classList.remove('hidden');
+                appView.classList.add('hidden');
+            }
+        });
+
+        // FUNCIONES DE INTERFAZ
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        };
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('notification-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-circle-exclamation'}"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // CARGA DE DATOS DESDE FIREBASE
+        let unsubMaterials, unsubSales, unsubExpenses, unsubProducts;
+
+        function initDataListeners() {
+            // Limpiar listeners anteriores si los hubiera
+            if(unsubMaterials) unsubMaterials();
+            if(unsubSales) unsubSales();
+            if(unsubExpenses) unsubExpenses();
+            if(unsubProducts) unsubProducts();
+
+            const matRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials');
+            const salesRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales');
+            const expRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'expenses');
+            const prodRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products');
+
+            unsubMaterials = onSnapshot(matRef, (snap) => {
+                materials = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                updateMaterialUI();
+                updateDashboard();
+            }, (err) => showToast('Error cargando materiales. Revisa Firebase Rules.', 'error'));
+
+            unsubSales = onSnapshot(salesRef, (snap) => {
+                sales = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                updateSalesUI();
+                updateDashboard();
+            });
+
+            unsubExpenses = onSnapshot(expRef, (snap) => {
+                expenses = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                updateExpensesUI();
+                updateDashboard();
+            });
+
+            unsubProducts = onSnapshot(prodRef, (snap) => {
+                products = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                updateCatalogUI();
+            });
+        }
+
+        // RENDERIZADO UI
+        function updateMaterialUI() {
+            const selects = document.querySelectorAll('.material-select');
+            selects.forEach(select => {
+                select.innerHTML = '<option value="" disabled selected>Selecciona Filamento...</option>' + 
+                    materials.map(m => `<option value="${m.id}">${m.name} (${m.color})</option>`).join('');
+            });
+
+            document.getElementById('table-materials').innerHTML = materials.map(m => `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-4 font-medium text-slate-800">${m.name}</td>
+                    <td class="p-4">${m.color} - ${m.type}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-semibold ${m.currentWeight < 200 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}">${m.currentWeight}g / ${m.totalWeight}g</span></td>
+                    <td class="p-4">${Number(m.cost).toFixed(2)} €</td>
+                    <td class="p-4 text-right"><button onclick="deleteDocItem('materials', '${m.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('') || `<tr><td colSpan="5" class="p-8 text-center text-slate-500">No hay bobinas registradas.</td></tr>`;
+        }
+
+        function updateSalesUI() {
+            document.getElementById('table-sales').innerHTML = sales.map(s => {
+                const m = materials.find(x => x.id === s.materialId) || {name: 'Desconocido', color: ''};
+                return `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-4 text-slate-500">${s.date}</td>
+                    <td class="p-4 font-medium">${s.projectName}</td>
+                    <td class="p-4">${s.gramsUsed}g <span class="text-xs text-slate-400 block">${m.name}</span></td>
+                    <td class="p-4 font-semibold text-green-600">+${Number(s.price).toFixed(2)} €</td>
+                    <td class="p-4 text-right"><button onclick="deleteDocItem('sales', '${m.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `}).join('') || `<tr><td colSpan="5" class="p-8 text-center text-slate-500">No hay ventas registradas.</td></tr>`;
+        }
+
+        function updateExpensesUI() {
+            document.getElementById('table-expenses').innerHTML = expenses.map(e => `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-4 text-slate-500">${e.date}</td>
+                    <td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded text-xs">${e.type}</span></td>
+                    <td class="p-4 font-medium">${e.description}</td>
+                    <td class="p-4 font-semibold text-orange-600">-${Number(e.cost).toFixed(2)} €</td>
+                    <td class="p-4 text-right"><button onclick="deleteDocItem('expenses', '${e.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('') || `<tr><td colSpan="5" class="p-8 text-center text-slate-500">No hay gastos registrados.</td></tr>`;
+        }
+
+        function updateCatalogUI() {
+            document.getElementById('catalog-cards').innerHTML = products.map(p => {
+                const m = materials.find(x => x.id === p.materialId);
+                const matCost = m ? (m.cost / m.totalWeight) * p.weight : 0;
+                const profit = p.price - matCost;
+                
+                return `
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col h-full">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-slate-800 text-lg">${p.name}</h4>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-1 rounded-full">Stock: ${p.stock}</span>
+                    </div>
+                    <div class="text-sm text-slate-500 mb-4 flex-grow">
+                        <p><i class="fa-solid fa-weight-hanging w-4"></i> ${p.weight}g (${m ? m.color : '?'})</p>
+                        <p><i class="fa-solid fa-coins w-4"></i> Coste: <span class="text-red-500">${matCost.toFixed(2)}€</span></p>
+                        <p><i class="fa-solid fa-tag w-4"></i> Venta: <span class="text-green-600 font-bold">${Number(p.price).toFixed(2)}€</span></p>
+                        <div class="mt-2 pt-2 border-t border-slate-100">
+                            <span class="text-xs uppercase tracking-wider font-semibold text-slate-400">Beneficio Limpio</span>
+                            <p class="text-lg font-bold text-indigo-600">+${profit.toFixed(2)}€</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mt-auto">
+                        <button onclick="window.fabricateProduct('${p.id}', '${p.materialId}', ${p.weight})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded font-medium text-sm transition-colors">
+                            <i class="fa-solid fa-hammer"></i> Fabricar
+                        </button>
+                        <button onclick="window.sellProduct('${p.id}', '${p.name}', '${p.materialId}', ${p.weight}, ${p.price})" class="bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded font-medium text-sm transition-colors ${p.stock < 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${p.stock < 1 ? 'disabled' : ''}>
+                            <i class="fa-solid fa-cart-shopping"></i> Vender
+                        </button>
+                    </div>
+                </div>
+            `}).join('') || `<div class="col-span-full p-8 text-center text-slate-500 border-2 border-dashed rounded-xl">No tienes productos en el catálogo.</div>`;
+        }
+
+        function updateDashboard() {
+            const matCost = materials.reduce((acc, m) => acc + Number(m.cost), 0);
+            const eqCost = expenses.reduce((acc, e) => acc + Number(e.cost), 0);
+            const rev = sales.reduce((acc, s) => acc + Number(s.price), 0);
+            const bal = rev - (matCost + eqCost);
+
+            document.getElementById('dashboard-cards').innerHTML = `
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-green-100 text-green-600 rounded-full"><i class="fa-solid fa-sack-dollar text-xl"></i></div>
+                    <div><p class="text-xs font-medium text-slate-500 uppercase">Ingresos</p><p class="text-xl font-bold">${rev.toFixed(2)} €</p></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-purple-100 text-purple-600 rounded-full"><i class="fa-solid fa-boxes-stacked text-xl"></i></div>
+                    <div><p class="text-xs font-medium text-slate-500 uppercase">Filamentos</p><p class="text-xl font-bold">${matCost.toFixed(2)} €</p></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center space-x-4">
+                    <div class="p-3 bg-orange-100 text-orange-600 rounded-full"><i class="fa-solid fa-wrench text-xl"></i></div>
+                    <div><p class="text-xs font-medium text-slate-500 uppercase">Máquinas</p><p class="text-xl font-bold">${eqCost.toFixed(2)} €</p></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center space-x-4 ${bal >= 0 ? 'bg-indigo-50' : 'bg-red-50'}">
+                    <div class="p-3 rounded-full ${bal >= 0 ? 'bg-indigo-100 text-indigo-600' : 'bg-red-100 text-red-600'}"><i class="fa-solid fa-chart-line text-xl"></i></div>
+                    <div><p class="text-xs font-medium text-slate-500 uppercase">Balance</p><p class="text-xl font-bold ${bal >= 0 ? 'text-indigo-600' : 'text-red-600'}">${bal.toFixed(2)} €</p></div>
+                </div>
+            `;
+
+            document.getElementById('dashboard-stock').innerHTML = materials.map(m => {
+                const p = (m.currentWeight / m.totalWeight) * 100;
+                return `
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm"><span class="font-medium">${m.name} (${m.color})</span><span class="${p < 20 ? 'text-red-500 font-bold' : 'text-slate-500'}">${m.currentWeight}g</span></div>
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="h-2 rounded-full transition-all ${p < 20 ? 'bg-red-500' : p < 50 ? 'bg-orange-400' : 'bg-indigo-500'}" style="width: ${p}%"></div>
+                    </div>
+                </div>
+            `}).join('') || '<p class="text-slate-500">No hay materiales.</p>';
+        }
+
+        // ACCIONES DE FORMULARIOS FIREBASE
+        document.getElementById('form-material').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('mat-name').value,
+                color: document.getElementById('mat-color').value,
+                type: document.getElementById('mat-type').value,
+                totalWeight: Number(document.getElementById('mat-weight').value),
+                currentWeight: Number(document.getElementById('mat-weight').value),
+                cost: Number(document.getElementById('mat-cost').value)
+            };
+            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials'), data);
+            e.target.reset();
+            showToast('Bobina guardada');
+        });
+
+        document.getElementById('form-sale').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const matId = document.getElementById('sale-material').value;
+            const grams = Number(document.getElementById('sale-weight').value);
+            const m = materials.find(x => x.id === matId);
+            
+            if(!m || m.currentWeight < grams) return showToast('No hay suficiente material en la bobina', 'error');
+
+            const saleData = {
+                projectName: document.getElementById('sale-name').value,
+                materialId: matId,
+                gramsUsed: grams,
+                price: Number(document.getElementById('sale-price').value),
+                date: new Date().toISOString().split('T')[0]
+            };
+            
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: m.currentWeight - grams });
+            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), saleData);
+            e.target.reset();
+            showToast('Venta registrada');
+        });
+
+        document.getElementById('form-expense').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'expenses'), {
+                type: document.getElementById('exp-type').value,
+                description: document.getElementById('exp-desc').value,
+                cost: Number(document.getElementById('exp-cost').value),
+                date: new Date().toISOString().split('T')[0]
+            });
+            e.target.reset();
+            showToast('Gasto registrado');
+        });
+
+        document.getElementById('form-product').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products'), {
+                name: document.getElementById('prod-name').value,
+                materialId: document.getElementById('prod-material').value,
+                weight: Number(document.getElementById('prod-weight').value),
+                price: Number(document.getElementById('prod-price').value),
+                stock: 0
+            });
+            e.target.reset();
+            showToast('Producto añadido al catálogo');
+        });
+
+        // ACCIONES GLOBALES EXPORTADAS
+        window.deleteDocItem = async (col, id) => {
+            if(confirm('¿Seguro que quieres borrar esto?')) {
+                await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, col, id));
+                showToast('Elemento borrado');
+            }
+        };
+
+        window.fabricateProduct = async (prodId, matId, weight) => {
+            const p = products.find(x => x.id === prodId);
+            const m = materials.find(x => x.id === matId);
+            if(!m) return showToast('Filamento no encontrado', 'error');
+            if(m.currentWeight < weight) return showToast('No hay suficiente filamento en la bobina', 'error');
+            
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: m.currentWeight - weight });
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: p.stock + 1 });
+            showToast(`Fabricado: +1 ${p.name}`);
+        };
+
+        window.sellProduct = async (prodId, name, matId, weight, price) => {
+            const p = products.find(x => x.id === prodId);
+            if(p.stock < 1) return;
+
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: p.stock - 1 });
+            await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), {
+                projectName: `Venta Catálogo: ${name}`, materialId: matId, gramsUsed: weight, price: price, date: new Date().toISOString().split('T')[0]
+            });
+            showToast(`Vendido: ${name} por ${price}€`);
+        };
+    </script>
+</body>
+</html>
