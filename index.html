@@ -104,18 +104,29 @@
             <!-- CONTENEDOR DASHBOARD -->
             <div id="view-dashboard" class="view-section">
                 <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-6">
-                    <i class="fa-solid fa-chart-pie text-indigo-600"></i> Estado Financiero
+                    <i class="fa-solid fa-chart-pie text-indigo-600"></i> Estado Financiero y Operativo
                 </h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="dashboard-cards">
                     <!-- Se llena por JS -->
                 </div>
                 
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-boxes-stacked text-slate-500"></i> Niveles de Filamento
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-stock">
-                        <!-- Se llena por JS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-boxes-stacked text-slate-500"></i> Niveles de Filamento
+                        </h3>
+                        <div class="grid grid-cols-1 gap-4" id="dashboard-stock">
+                            <!-- Se llena por JS -->
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-store text-slate-500"></i> Valor del Stock Fabricado
+                        </h3>
+                        <div id="dashboard-catalog-stock">
+                            <!-- Se llena por JS -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -448,6 +459,7 @@
             const eqCost = expenses.reduce((acc, e) => acc + Number(e.cost), 0);
             const rev = sales.reduce((acc, s) => acc + Number(s.price), 0);
             const bal = rev - (matCost + eqCost);
+            const totalStockValue = products.reduce((acc, p) => acc + (Number(p.stock || 0) * Number(p.price || 0)), 0);
 
             document.getElementById('dashboard-cards').innerHTML = `
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center space-x-4">
@@ -478,6 +490,26 @@
                     </div>
                 </div>
             `}).join('') || '<p class="text-slate-500">No hay materiales.</p>';
+
+            const inStockProducts = products.filter(p => p.stock > 0);
+            document.getElementById('dashboard-catalog-stock').innerHTML = `
+                <div class="flex items-center space-x-4 mb-6">
+                    <div class="p-4 bg-blue-50 text-blue-600 rounded-xl border border-blue-100"><i class="fa-solid fa-tag text-2xl"></i></div>
+                    <div>
+                        <p class="text-sm text-slate-500">Valor potencial en ventas</p>
+                        <p class="text-3xl font-bold text-slate-800">${totalStockValue.toFixed(2)} €</p>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    ${inStockProducts.map(p => `
+                        <div class="flex justify-between text-sm items-center py-2 border-b border-slate-50 last:border-0">
+                            <span class="font-medium text-slate-700">${p.name}</span>
+                            <span class="bg-slate-100 px-2 py-1 rounded text-slate-600 font-semibold">${p.stock} uds.</span>
+                        </div>
+                    `).join('')}
+                    ${inStockProducts.length === 0 ? '<p class="text-sm text-slate-500">No hay productos en stock.</p>' : ''}
+                </div>
+            `;
         }
 
         // ACCIONES DE FORMULARIOS FIREBASE
