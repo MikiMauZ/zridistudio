@@ -446,7 +446,11 @@
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col h-full">
                     <div class="flex justify-between items-start mb-2">
                         <h4 class="font-bold text-slate-800 text-lg">${p.name}</h4>
-                        <span class="${currentStock > 0 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-500'} text-xs font-bold px-2 py-1 rounded-full">Stock: ${currentStock}</span>
+                        <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-full px-1">
+                            <button onclick="window.adjustStock('${p.id}', -1)" class="text-slate-400 hover:text-red-500 w-6 h-6 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors" title="Restar stock manualmente (Rotura/Regalo)"><i class="fa-solid fa-minus text-xs"></i></button>
+                            <span class="${currentStock > 0 ? 'text-blue-700' : 'text-slate-500'} text-xs font-bold px-1 min-w-[50px] text-center">St: ${currentStock}</span>
+                            <button onclick="window.adjustStock('${p.id}', 1)" class="text-slate-400 hover:text-green-500 w-6 h-6 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors" title="Sumar stock manualmente"><i class="fa-solid fa-plus text-xs"></i></button>
+                        </div>
                     </div>
                     <div class="text-sm text-slate-500 mb-4 flex-grow">
                         <p><i class="fa-solid fa-weight-hanging w-4"></i> ${p.weight}g (${m ? m.color : '?'})</p>
@@ -459,10 +463,10 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 mt-auto">
-                        <button onclick="window.fabricateProduct('${p.id}', '${p.materialId}', ${p.weight})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded font-medium text-sm transition-colors">
+                        <button onclick="window.fabricateProduct('${p.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded font-medium text-sm transition-colors">
                             <i class="fa-solid fa-hammer"></i> Fabricar
                         </button>
-                        <button onclick="window.sellProduct('${p.id}', '${p.name}', '${p.materialId}', ${p.weight}, ${p.price})" class="bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded font-medium text-sm transition-colors ${currentStock < 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${currentStock < 1 ? 'disabled' : ''}>
+                        <button onclick="window.sellProduct('${p.id}')" class="bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded font-medium text-sm transition-colors ${currentStock < 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${currentStock < 1 ? 'disabled' : ''}>
                             <i class="fa-solid fa-cart-shopping"></i> Vender
                         </button>
                     </div>
@@ -617,33 +621,45 @@
             }
         };
 
-        window.fabricateProduct = async (prodId, matId, weight) => {
+        window.fabricateProduct = async (prodId) => {
             const p = products.find(x => x.id === prodId);
-            const m = materials.find(x => x.id === matId);
-            if(!m) return showToast('Filamento no encontrado', 'error');
-            if(m.currentWeight < weight) return showToast('No hay suficiente filamento en la bobina', 'error');
+            if(!p) return;
+            const m = materials.find(x => x.id === p.materialId);
             
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', matId), { currentWeight: Number(m.currentWeight) - Number(weight) });
+            if(!m) return showToast('Filamento no encontrado', 'error');
+            if(m.currentWeight < p.weight) return showToast('No hay suficiente filamento en la bobina', 'error');
+            
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials', m.id), { currentWeight: Number(m.currentWeight) - Number(p.weight) });
             await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock || 0) + 1 });
             showToast(`Fabricado: +1 ${p.name}`);
         };
 
-        window.sellProduct = async (prodId, name, matId, weight, price) => {
+        window.sellProduct = async (prodId) => {
             const p = products.find(x => x.id === prodId);
-            if(!p || Number(p.stock) < 1) return;
+            if(!p || Number(p.stock) < 1) return showToast('No hay stock para vender', 'error');
 
             await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock) - 1 });
             await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), {
-                projectName: `Venta: ${name}`, 
-                materialId: matId, 
+                projectName: `Venta: ${p.name}`, 
+                materialId: p.materialId, 
                 productId: prodId,
-                gramsUsed: weight, 
+                gramsUsed: p.weight, 
                 hours: p.hours || 0,
-                price: price, 
+                price: p.price, 
                 date: new Date().toISOString().split('T')[0],
                 isFromStock: true
             });
-            showToast(`Vendido: ${name} por ${price}€`);
+            showToast(`Vendido: ${p.name} por ${p.price}€`);
+        };
+        
+        window.adjustStock = async (prodId, change) => {
+            const p = products.find(x => x.id === prodId);
+            if(!p) return;
+            const newStock = Number(p.stock || 0) + change;
+            if(newStock < 0) return showToast('El stock no puede ser negativo', 'error');
+            
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: newStock });
+            showToast(`Stock ajustado manualmente`);
         };
     </script>
 </body>
