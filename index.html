@@ -11,7 +11,7 @@
         .tab-btn.active { background-color: #4f46e5; color: white; }
         .tab-btn { background-color: transparent; color: #cbd5e1; }
         .tab-btn:hover:not(.active) { background-color: #6366f1; color: white; }
-
+        
         #notification-container {
             position: fixed;
             bottom: 20px;
@@ -54,20 +54,20 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
     <div id="notification-container"></div>
-    <div id="sync-banner" class="hidden"><i class="fa-solid fa-rotate fa-spin mr-2"></i>Sincronizando datos...</div>
+    <div id="sync-banner" class="hidden"><i class="fa-solid fa-rotate fa-spin mr-2"></i>Sincronizando datos con la nube...</div>
 
-    <!-- MODAL GENÉRICO (edición, abrir/cerrar caja, vender) -->
+    <!-- MODAL GENÉRICO -->
     <div id="modal-overlay" class="hidden">
         <div id="modal-content" class="bg-white rounded-xl shadow-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"></div>
     </div>
 
-    <!-- PANTALLA DE LOGIN (Sin botón de registro por seguridad) -->
+    <!-- PANTALLA DE LOGIN -->
     <div id="auth-view" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
         <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full border border-slate-200">
             <div class="text-center mb-8">
                 <i class="fa-solid fa-cube text-4xl text-indigo-600 mb-3"></i>
                 <h1 class="text-2xl font-bold text-slate-800">ZRI D STUDIO</h1>
-                <p class="text-slate-500 text-sm mt-1">Acceso seguro al panel de gestión</p>
+                <p class="text-slate-500 text-sm mt-1">Acceso privado de administración</p>
             </div>
 
             <form id="auth-form" class="space-y-4">
@@ -79,7 +79,7 @@
                     <label class="block text-sm font-medium text-slate-700 mb-1">Contraseña</label>
                     <input type="password" id="auth-password" required class="w-full border border-slate-300 rounded-md p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" placeholder="••••••••">
                 </div>
-
+                
                 <div class="pt-2">
                     <button type="button" id="btn-login" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-md transition-colors">
                         Iniciar Sesión
@@ -89,7 +89,7 @@
         </div>
     </div>
 
-    <!-- APLICACIÓN PRINCIPAL (Oculta por defecto) -->
+    <!-- APLICACIÓN PRINCIPAL -->
     <div id="app-view" class="hidden">
         <!-- Navegación -->
         <nav class="bg-indigo-900 text-white shadow-md sticky top-0 z-40">
@@ -679,7 +679,8 @@
             `}).join('') || `<tr><td colspan="7" class="p-8 text-center text-slate-500">No hay ventas que coincidan con el filtro.</td></tr>`;
 
             const total = filtered.reduce((acc, s) => acc + Number(s.price || 0), 0);
-            document.getElementById('sale-filter-total').textContent = total.toFixed(2) + ' €';
+            const totalElement = document.getElementById('sale-filter-total');
+            if (totalElement) totalElement.textContent = total.toFixed(2) + ' €';
         }
         ['search-sales', 'sale-filter-from', 'sale-filter-to'].forEach(id => {
             document.getElementById(id)?.addEventListener('input', updateSalesUI);
@@ -1251,10 +1252,10 @@
                         <span>${s.revenue.toFixed(0)}€ / -${s.expense.toFixed(0)}€</span>
                     </div>
                     <div class="w-full bg-slate-100 rounded h-2 mb-1">
-                        <div class="h-2 rounded bg-indigo-500" style="width: ${(s.revenue / max) * 100}%"></div>
+                        <div class="h-2 rounded bg-indigo-500" style="width: ${max > 0 ? (s.revenue / max) * 100 : 0}%"></div>
                     </div>
                     <div class="w-full bg-slate-100 rounded h-2">
-                        <div class="h-2 rounded bg-orange-400" style="width: ${(s.expense / max) * 100}%"></div>
+                        <div class="h-2 rounded bg-orange-400" style="width: ${max > 0 ? (s.expense / max) * 100 : 0}%"></div>
                     </div>
                 </div>
             `).join('');
