@@ -102,8 +102,10 @@
                     <div class="flex flex-wrap gap-1 items-center">
                         <button onclick="switchTab('dashboard')" class="tab-btn active px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-dashboard">Resumen</button>
                         <button onclick="switchTab('inventory')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-inventory">Bobinas</button>
-                        <button onclick="switchTab('catalog')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-catalog">Catálogo</button>
+                        <button onclick="switchTab('catalog')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-catalog">Stock</button>
                         <button onclick="switchTab('sales')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-sales">Ventas</button>
+                        <button onclick="switchTab('orders')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-orders">Pedidos</button>
+                        <button onclick="switchTab('ideas')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-ideas">Ideas</button>
                         <button onclick="switchTab('cash')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-cash">Caja</button>
                         <button onclick="switchTab('expenses')" class="tab-btn px-3 py-1.5 rounded-md text-sm font-medium transition-colors" id="tab-expenses">Gastos</button>
 
@@ -200,7 +202,7 @@
 
             <!-- CONTENEDOR CATÁLOGO -->
             <div id="view-catalog" class="view-section hidden">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">Catálogo y Stock de Productos</h2>
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Stock de Productos</h2>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
                     <h3 class="text-lg font-semibold mb-4">Crear nuevo modelo para vender</h3>
                     <form id="form-product" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
@@ -254,6 +256,10 @@
                             <input required type="number" step="0.01" id="sale-price" placeholder="Cobrado" class="border rounded-md p-2 w-full pr-8">
                             <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
                         </div>
+                        <div class="flex relative">
+                            <input type="number" step="0.01" id="sale-tip" placeholder="Propina (opcional)" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
+                        </div>
                         <select id="sale-payment" class="border rounded-md p-2 bg-white lg:col-span-2">
                             <option value="Efectivo">Efectivo</option>
                             <option value="Tarjeta">Tarjeta</option>
@@ -290,6 +296,59 @@
                         <tbody id="table-sales" class="text-sm"></tbody>
                     </table>
                 </div>
+            </div>
+
+            <!-- CONTENEDOR PEDIDOS -->
+            <div id="view-orders" class="view-section hidden">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Pedidos Personalizados</h2>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-600 text-sm">Anota aquí los pedidos a medida. Puedes llevar el control de lo que te han adelantado y si ya está entregado.</h3>
+                    <form id="form-order" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <input required type="text" id="order-client" placeholder="Cliente / Proyecto" class="lg:col-span-2 border rounded-md p-2">
+                        <input type="text" id="order-desc" placeholder="Detalles (color, tamaño...)" class="lg:col-span-3 border rounded-md p-2">
+                        <div class="flex relative">
+                            <input required type="number" step="0.01" id="order-price" placeholder="Precio Total" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
+                        </div>
+                        <div class="flex relative">
+                            <input required type="number" step="0.01" id="order-paid" placeholder="Cobrado (Anticipo)" value="0" class="border rounded-md p-2 w-full pr-8">
+                            <span class="absolute right-3 top-2.5 text-slate-400 text-sm">€</span>
+                        </div>
+                        <select id="order-payment" class="border rounded-md p-2 bg-white">
+                            <option value="Efectivo">Efectivo</option><option value="Tarjeta">Tarjeta</option><option value="Bizum">Bizum / Transferencia</option>
+                        </select>
+                        <select id="order-status" class="border rounded-md p-2 bg-white lg:col-span-2">
+                            <option value="Pendiente">Pendiente de entrega</option><option value="Entregado">Entregado</option>
+                        </select>
+                        <button type="submit" class="lg:col-span-5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-md transition-colors">
+                            <i class="fa-solid fa-plus mr-2"></i>Registrar Pedido
+                        </button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[750px]">
+                        <thead class="bg-slate-50 text-slate-600 text-sm">
+                            <tr><th class="p-4 border-b">Fecha</th><th class="p-4 border-b">Cliente/Proyecto</th><th class="p-4 border-b">Total</th><th class="p-4 border-b">Cobrado</th><th class="p-4 border-b">Estado</th><th class="p-4 border-b text-right">Acciones</th></tr>
+                        </thead>
+                        <tbody id="table-orders" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR IDEAS -->
+            <div id="view-ideas" class="view-section hidden">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Ideas para Producción</h2>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <form id="form-idea" class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                        <input required type="text" id="idea-title" placeholder="Título de la idea (ej. Soporte mando PS5)" class="lg:col-span-2 border rounded-md p-2">
+                        <input type="text" id="idea-link" placeholder="Enlace (Thingiverse, MakerWorld...)" class="lg:col-span-2 border rounded-md p-2">
+                        <textarea id="idea-desc" placeholder="Notas o detalles de producción..." class="lg:col-span-4 border rounded-md p-2 h-20 resize-none"></textarea>
+                        <button type="submit" class="lg:col-span-4 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 rounded-md transition-colors">
+                            <i class="fa-solid fa-lightbulb mr-2"></i>Guardar Idea
+                        </button>
+                    </form>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="ideas-cards"></div>
             </div>
 
             <!-- CONTENEDOR CAJA -->
@@ -368,10 +427,12 @@
         let expenses = [];
         let products = [];
         let cashSessions = [];
+        let orders = [];
+        let ideas = [];
         const APP_ID = 'zrid-studio-app';
 
         // Control de la barra "sincronizando"
-        const requiredCollections = ['materials', 'sales', 'expenses', 'products', 'cashSessions'];
+        const requiredCollections = ['materials', 'sales', 'expenses', 'products', 'cashSessions', 'orders', 'ideas'];
         let loadedCollections = new Set();
         function markLoaded(name) {
             loadedCollections.add(name);
@@ -449,7 +510,7 @@
         };
         modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) window.closeModal(); });
 
-        let unsubMaterials, unsubSales, unsubExpenses, unsubProducts, unsubCash;
+        let unsubMaterials, unsubSales, unsubExpenses, unsubProducts, unsubCash, unsubOrders, unsubIdeas;
 
         function initDataListeners() {
             if (unsubMaterials) unsubMaterials();
@@ -457,12 +518,16 @@
             if (unsubExpenses) unsubExpenses();
             if (unsubProducts) unsubProducts();
             if (unsubCash) unsubCash();
+            if (unsubOrders) unsubOrders();
+            if (unsubIdeas) unsubIdeas();
 
             const matRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'materials');
             const salesRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales');
             const expRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'expenses');
             const prodRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products');
             const cashRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'cashSessions');
+            const ordersRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'orders');
+            const ideasRef = collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'ideas');
 
             unsubMaterials = onSnapshot(matRef, (snap) => {
                 materials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -499,6 +564,20 @@
                 updateCashUI();
                 markLoaded('cashSessions');
             }, (err) => { console.error(err); showToast('Error al cargar caja', 'error'); });
+
+            unsubOrders = onSnapshot(ordersRef, (snap) => {
+                orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                updateOrdersUI();
+                updateDashboard();
+                updateCashUI();
+                markLoaded('orders');
+            }, (err) => { console.error(err); showToast('Error al cargar pedidos', 'error'); });
+
+            unsubIdeas = onSnapshot(ideasRef, (snap) => {
+                ideas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                updateIdeasUI();
+                markLoaded('ideas');
+            }, (err) => { console.error(err); showToast('Error al cargar ideas', 'error'); });
         }
 
         function getOpenSession() {
@@ -660,6 +739,7 @@
             const filtered = getFilteredSales().slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
             document.getElementById('table-sales').innerHTML = filtered.map(s => {
                 const m = materials.find(x => x.id === s.materialId) || { name: 'Borrado', color: '' };
+                const tipHtml = s.tip ? `<br><span class="text-xs text-yellow-600 font-bold">+${Number(s.tip).toFixed(2)}€ propina</span>` : '';
                 return `
                 <tr class="border-b hover:bg-slate-50">
                     <td class="p-4 text-slate-500">${s.date}</td>
@@ -670,7 +750,7 @@
                     <td class="p-4">${s.gramsUsed}g <span class="text-xs text-slate-400 block">${m.name} ${m.color}</span></td>
                     <td class="p-4">${s.hours || 0} h</td>
                     <td class="p-4"><span class="text-xs text-slate-500">${s.paymentMethod || 'Efectivo'}</span></td>
-                    <td class="p-4 font-semibold text-green-600">+${Number(s.price).toFixed(2)} €</td>
+                    <td class="p-4 font-semibold text-green-600">+${Number(s.price).toFixed(2)} € ${tipHtml}</td>
                     <td class="p-4 text-right space-x-3">
                         <button onclick="window.editSale('${s.id}')" class="text-slate-400 hover:text-indigo-600"><i class="fa-solid fa-pen"></i></button>
                         <button onclick="window.deleteDocItem('sales', '${s.id}', '${s.materialId}', ${s.gramsUsed}, ${s.isFromStock || false}, '${s.productId || ''}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
@@ -678,7 +758,7 @@
                 </tr>
             `}).join('') || `<tr><td colspan="7" class="p-8 text-center text-slate-500">No hay ventas que coincidan con el filtro.</td></tr>`;
 
-            const total = filtered.reduce((acc, s) => acc + Number(s.price || 0), 0);
+            const total = filtered.reduce((acc, s) => acc + Number(s.price || 0) + Number(s.tip || 0), 0);
             const totalElement = document.getElementById('sale-filter-total');
             if (totalElement) totalElement.textContent = total.toFixed(2) + ' €';
         }
@@ -705,7 +785,16 @@
                         <input id="es-grams" type="number" value="${s.gramsUsed}" class="w-full border rounded-md p-2">
                     </div>
                     <input id="es-hours" type="number" step="0.5" value="${s.hours || 0}" placeholder="Horas" class="w-full border rounded-md p-2">
-                    <input id="es-price" type="number" step="0.01" value="${s.price}" placeholder="Cobrado" class="w-full border rounded-md p-2">
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="text-xs text-slate-500">Cobrado (€)</label>
+                            <input id="es-price" type="number" step="0.01" value="${s.price}" class="w-full border rounded-md p-2">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-xs text-slate-500">Propina (€)</label>
+                            <input id="es-tip" type="number" step="0.01" value="${s.tip || 0}" class="w-full border rounded-md p-2">
+                        </div>
+                    </div>
                     <select id="es-payment" class="w-full border rounded-md p-2 bg-white">
                         ${['Efectivo','Tarjeta','Bizum'].map(p => `<option value="${p}" ${(s.paymentMethod || 'Efectivo') === p ? 'selected' : ''}>${p === 'Bizum' ? 'Bizum / Transferencia' : p}</option>`).join('')}
                     </select>
@@ -741,6 +830,7 @@
                     gramsUsed: newGrams,
                     hours: Number(document.getElementById('es-hours').value || 0),
                     price: Number(document.getElementById('es-price').value),
+                    tip: Number(document.getElementById('es-tip').value || 0),
                     paymentMethod: document.getElementById('es-payment').value,
                     date: document.getElementById('es-date').value
                 });
@@ -848,12 +938,20 @@
             openModal(`
                 <h3 class="text-lg font-bold mb-1">Vender ${p.name}</h3>
                 <p class="text-slate-500 text-sm mb-4">PVP: <span class="font-semibold text-green-600">${Number(p.price).toFixed(2)}€</span></p>
-                <label class="text-xs text-slate-500">Método de pago</label>
-                <select id="sell-payment" class="w-full border rounded-md p-2 bg-white mt-1">
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Tarjeta">Tarjeta</option>
-                    <option value="Bizum">Bizum / Transferencia</option>
-                </select>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-500">Propina extra (€) (Opcional)</label>
+                        <input id="sell-tip" type="number" step="0.01" placeholder="0.00" class="w-full border rounded-md p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500">Método de pago</label>
+                        <select id="sell-payment" class="w-full border rounded-md p-2 bg-white mt-1">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                            <option value="Bizum">Bizum / Transferencia</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="flex gap-2 mt-5">
                     <button onclick="window.closeModal()" class="flex-1 border rounded-md py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
                     <button onclick="window.sellProduct('${prodId}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-md py-2">Confirmar venta</button>
@@ -900,23 +998,25 @@
             const p = products.find(x => x.id === prodId);
             if (!p || Number(p.stock) < 1) return showToast('No hay stock para vender', 'error');
             const paymentMethod = document.getElementById('sell-payment')?.value || 'Efectivo';
+            const tipAmount = Number(document.getElementById('sell-tip')?.value || 0);
             const openSession = getOpenSession();
 
             await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'products', prodId), { stock: Number(p.stock) - 1 });
             await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'sales'), {
-                projectName: `Venta: ${p.name}`,
+                projectName: `Venta Stock: ${p.name}`,
                 materialId: p.materialId,
                 productId: prodId,
                 gramsUsed: p.weight,
                 hours: p.hours || 0,
                 price: p.price,
+                tip: tipAmount,
                 paymentMethod,
                 date: new Date().toISOString().split('T')[0],
                 isFromStock: true,
                 cashSessionId: openSession ? openSession.id : null
             });
             window.closeModal();
-            showToast(`Vendido: ${p.name} por ${p.price}€`);
+            showToast(`Vendido: ${p.name} por ${p.price}€` + (tipAmount > 0 ? ` (+${tipAmount}€ propina)` : ''));
         };
 
         window.adjustStock = async (prodId, change) => {
@@ -984,6 +1084,7 @@
                 gramsUsed: grams,
                 hours: Number(document.getElementById('sale-hours').value || 0),
                 price: Number(document.getElementById('sale-price').value),
+                tip: Number(document.getElementById('sale-tip')?.value || 0),
                 paymentMethod: document.getElementById('sale-payment').value,
                 date: new Date().toISOString().split('T')[0],
                 isFromStock: false,
@@ -1024,11 +1125,17 @@
         // ---------- CAJA ----------
         function sessionTotals(sessionId) {
             const sSales = sales.filter(s => s.cashSessionId === sessionId);
+            const sOrders = orders.filter(o => o.cashSessionId === sessionId);
             const sExpenses = expenses.filter(x => x.cashSessionId === sessionId);
-            const cashSales = sSales.filter(s => (s.paymentMethod || 'Efectivo') === 'Efectivo').reduce((a, s) => a + Number(s.price || 0), 0);
-            const otherSales = sSales.filter(s => (s.paymentMethod || 'Efectivo') !== 'Efectivo').reduce((a, s) => a + Number(s.price || 0), 0);
+            
+            const cashSales = sSales.filter(s => (s.paymentMethod || 'Efectivo') === 'Efectivo').reduce((a, s) => a + Number(s.price || 0) + Number(s.tip || 0), 0)
+                            + sOrders.filter(o => (o.paymentMethod || 'Efectivo') === 'Efectivo').reduce((a, o) => a + Number(o.amountPaid || 0), 0);
+                            
+            const otherSales = sSales.filter(s => (s.paymentMethod || 'Efectivo') !== 'Efectivo').reduce((a, s) => a + Number(s.price || 0) + Number(s.tip || 0), 0)
+                             + sOrders.filter(o => (o.paymentMethod || 'Efectivo') !== 'Efectivo').reduce((a, o) => a + Number(o.amountPaid || 0), 0);
+                             
             const cashExpenses = sExpenses.filter(x => (x.paymentMethod || 'Efectivo') === 'Efectivo').reduce((a, x) => a + Number(x.cost || 0), 0);
-            return { cashSales, otherSales, cashExpenses, totalSales: cashSales + otherSales, salesCount: sSales.length };
+            return { cashSales, otherSales, cashExpenses, totalSales: cashSales + otherSales, salesCount: sSales.length + sOrders.length };
         }
 
         function updateCashUI() {
@@ -1174,7 +1281,9 @@
         function updateDashboard() {
             const matCost = materials.reduce((acc, m) => acc + Number(m.cost || 0), 0);
             const eqCost = expenses.reduce((acc, e) => acc + Number(e.cost || 0), 0);
-            const rev = sales.reduce((acc, s) => acc + Number(s.price || 0), 0);
+            const revSales = sales.reduce((acc, s) => acc + Number(s.price || 0) + Number(s.tip || 0), 0);
+            const revOrders = orders.reduce((acc, o) => acc + Number(o.amountPaid || 0), 0);
+            const rev = revSales + revOrders;
             const bal = rev - (matCost + eqCost);
             const totalStockValue = products.reduce((acc, p) => acc + (Number(p.stock || 0) * Number(p.price || 0)), 0);
 
@@ -1239,7 +1348,9 @@
                 months.push({ key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: d.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' }) });
             }
             const stats = months.map(mo => {
-                const revenue = sales.filter(s => (s.date || '').startsWith(mo.key)).reduce((a, s) => a + Number(s.price || 0), 0);
+                const revS = sales.filter(s => (s.date || '').startsWith(mo.key)).reduce((a, s) => a + Number(s.price || 0) + Number(s.tip || 0), 0);
+                const revO = orders.filter(o => (o.date || '').startsWith(mo.key)).reduce((a, o) => a + Number(o.amountPaid || 0), 0);
+                const revenue = revS + revO;
                 const expense = expenses.filter(e => (e.date || '').startsWith(mo.key)).reduce((a, e) => a + Number(e.cost || 0), 0);
                 return { ...mo, revenue, expense };
             });
@@ -1261,11 +1372,139 @@
             `).join('');
         }
 
+        // ---------- PEDIDOS ----------
+        function updateOrdersUI() {
+            const sorted = orders.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+            document.getElementById('table-orders').innerHTML = sorted.map(o => {
+                const isPaid = Number(o.amountPaid) >= Number(o.price);
+                const isDelivered = o.status === 'Entregado';
+                return `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="p-4 text-slate-500">${o.date}</td>
+                    <td class="p-4 font-medium text-slate-800">${o.clientName} <span class="block text-xs text-slate-500 font-normal">${o.description || ''}</span></td>
+                    <td class="p-4 font-semibold">${Number(o.price).toFixed(2)} €</td>
+                    <td class="p-4">
+                        <span class="${isPaid ? 'text-green-600 font-bold' : 'text-orange-500'}">${Number(o.amountPaid).toFixed(2)} €</span>
+                        ${!isPaid && Number(o.amountPaid) > 0 ? `<span class="block text-xs text-slate-400">Falta: ${(Number(o.price) - Number(o.amountPaid)).toFixed(2)} €</span>` : ''}
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded text-xs font-semibold ${isDelivered ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${o.status}</span>
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="window.editOrder('${o.id}')" class="text-slate-400 hover:text-indigo-600"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="window.deleteDocItem('orders', '${o.id}')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `}).join('') || `<tr><td colspan="6" class="p-8 text-center text-slate-500">No hay pedidos registrados.</td></tr>`;
+        }
+
+        document.getElementById('form-order')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const openSession = getOpenSession();
+            try {
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'orders'), {
+                    clientName: document.getElementById('order-client').value,
+                    description: document.getElementById('order-desc').value,
+                    price: Number(document.getElementById('order-price').value),
+                    amountPaid: Number(document.getElementById('order-paid').value || 0),
+                    paymentMethod: document.getElementById('order-payment').value,
+                    status: document.getElementById('order-status').value,
+                    date: new Date().toISOString().split('T')[0],
+                    cashSessionId: openSession ? openSession.id : null
+                });
+                e.target.reset();
+                showToast('Pedido registrado');
+            } catch (err) {
+                console.error(err);
+                showToast('Error al registrar pedido: ' + err.message, 'error');
+            }
+        });
+
+        window.editOrder = function(id) {
+            const o = orders.find(x => x.id === id);
+            if (!o) return;
+            openModal(`
+                <h3 class="text-lg font-bold mb-4">Editar pedido</h3>
+                <div class="space-y-3">
+                    <input id="eo-client" value="${o.clientName}" placeholder="Cliente / Proyecto" class="w-full border rounded-md p-2">
+                    <input id="eo-desc" value="${o.description || ''}" placeholder="Detalles" class="w-full border rounded-md p-2">
+                    <div class="flex gap-2">
+                        <div class="flex-1">
+                            <label class="text-xs text-slate-500">Precio Total (€)</label>
+                            <input id="eo-price" type="number" step="0.01" value="${o.price}" class="w-full border rounded-md p-2">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-xs text-slate-500">Cobrado (€)</label>
+                            <input id="eo-paid" type="number" step="0.01" value="${o.amountPaid}" class="w-full border rounded-md p-2">
+                        </div>
+                    </div>
+                    <select id="eo-payment" class="w-full border rounded-md p-2 bg-white">
+                        ${['Efectivo','Tarjeta','Bizum / Transferencia'].map(p => `<option value="${p.split(' ')[0]}" ${(o.paymentMethod || 'Efectivo').includes(p.split(' ')[0]) ? 'selected' : ''}>${p}</option>`).join('')}
+                    </select>
+                    <select id="eo-status" class="w-full border rounded-md p-2 bg-white">
+                        <option value="Pendiente" ${o.status === 'Pendiente' ? 'selected' : ''}>Pendiente de entrega</option>
+                        <option value="Entregado" ${o.status === 'Entregado' ? 'selected' : ''}>Entregado</option>
+                    </select>
+                    <input id="eo-date" type="date" value="${o.date}" class="w-full border rounded-md p-2">
+                </div>
+                <div class="flex gap-2 mt-5">
+                    <button onclick="window.closeModal()" class="flex-1 border rounded-md py-2 text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button onclick="window.saveOrder('${id}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md py-2">Guardar</button>
+                </div>
+            `);
+        };
+
+        window.saveOrder = async function(id) {
+            try {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'orders', id), {
+                    clientName: document.getElementById('eo-client').value,
+                    description: document.getElementById('eo-desc').value,
+                    price: Number(document.getElementById('eo-price').value),
+                    amountPaid: Number(document.getElementById('eo-paid').value),
+                    paymentMethod: document.getElementById('eo-payment').value,
+                    status: document.getElementById('eo-status').value,
+                    date: document.getElementById('eo-date').value
+                });
+                window.closeModal();
+                showToast('Pedido actualizado');
+            } catch (err) {
+                showToast('Error al guardar: ' + err.message, 'error');
+            }
+        };
+
+        // ---------- IDEAS ----------
+        function updateIdeasUI() {
+            document.getElementById('ideas-cards').innerHTML = ideas.map(i => `
+                <div class="bg-yellow-50 rounded-xl shadow-sm border border-yellow-200 p-5 flex flex-col h-full relative">
+                    <button onclick="window.deleteDocItem('ideas', '${i.id}')" class="absolute top-4 right-4 text-yellow-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                    <h4 class="font-bold text-yellow-800 text-lg pr-6 mb-2">${i.title}</h4>
+                    <p class="text-sm text-yellow-700 mb-4 whitespace-pre-wrap flex-grow">${i.description}</p>
+                    ${i.link ? `<a href="${i.link.startsWith('http') ? i.link : 'https://'+i.link}" target="_blank" class="text-xs text-indigo-600 hover:underline mt-auto inline-block truncate"><i class="fa-solid fa-link mr-1"></i>${i.link}</a>` : ''}
+                </div>
+            `).join('') || `<div class="col-span-full p-8 text-center text-slate-500 border-2 border-dashed rounded-xl">No hay ideas registradas. ¡Anota tu próxima inspiración!</div>`;
+        }
+
+        document.getElementById('form-idea')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await addDoc(collection(db, 'artifacts', APP_ID, 'users', CURRENT_USER_ID, 'ideas'), {
+                    title: document.getElementById('idea-title').value,
+                    link: document.getElementById('idea-link').value,
+                    description: document.getElementById('idea-desc').value,
+                    date: new Date().toISOString()
+                });
+                e.target.reset();
+                showToast('Idea guardada');
+            } catch (err) {
+                showToast('Error al guardar idea: ' + err.message, 'error');
+            }
+        });
+
         // ---------- BACKUP ----------
         document.getElementById('btn-backup')?.addEventListener('click', () => {
             const backup = {
                 exportedAt: new Date().toISOString(),
-                materials, products, sales, expenses, cashSessions
+                materials, products, sales, expenses, cashSessions, orders, ideas
             };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
